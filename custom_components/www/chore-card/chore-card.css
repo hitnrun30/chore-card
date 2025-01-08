@@ -1,0 +1,80 @@
+/* General card styling */
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ha-card-background, white);
+  border-radius: 10px;
+  box-shadow: var(--ha-card-box-shadow);
+  padding: 16px;
+  color: var(--primary-text-color);
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* 7 days + chore name column */
+  gap: 8px;
+  align-items: center;
+}
+
+/* Section headers (e.g., Daily, Weekly, Monthly) */
+.section-header {
+  grid-column: 1 / -1; /* Span all columns */
+  font-weight: bold;
+  font-size: 1.2em;
+  text-align: left;
+  padding: 8px 0;
+}
+
+/* Day headers (e.g., Mon, Tue) */
+.day-header {
+  text-align: center;
+  font-weight: bold;
+  background-color: var(--day-header-background-color, #007bff);
+  color: var(--day-header-font-color, white);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+/* Chore name column */
+.chore-name {
+  font-weight: normal;
+  text-align: left;
+  padding: 8px;
+  background-color: var(--chore-name-background, #f0f0f0);
+  border-radius: 4px;
+}
+
+/* Grid cells (e.g., dropdowns for assigning chores) */
+.grid-cell {
+  text-align: center;
+  padding: 8px;
+  background-color: var(--grid-cell-background, white);
+  border: 1px solid var(--divider-color, #e0e0e0);
+  border-radius: 4px;
+}
+
+/* Dropdown styling */
+.user-dropdown {
+  width: 100%;
+  padding: 4px;
+  font-size: 1em;
+  border: 1px solid var(--divider-color, #e0e0e0);
+  border-radius: 4px;
+  background-color: var(--dropdown-background, white);
+}
+
+/* Scorecard row */
+.scorecard {
+  display: flex;
+  justify-content: space-around;
+  margin: 8px 0;
+}
+
+.user-score {
+  text-align: center;
+  padding: 8px;
+  font-weight: bold;
+  border-radius: 4px;
+  background-color: var(--score-background-color, transparent);
+}

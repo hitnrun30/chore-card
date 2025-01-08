@@ -1,0 +1,12 @@
+chore_card:
+  cards:
+    - name: kitchen_chores
+      first_day_of_week: Monday
+      chores:
+        weekly:
+          - name: Mop Floors
+            points: 10
+        daily:
+          - name: Wash Dishes
+            points: 5
+

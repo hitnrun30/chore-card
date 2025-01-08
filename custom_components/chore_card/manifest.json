@@ -1,0 +1,10 @@
+{
+    "domain": "chore_card",
+    "name": "Chore Card",
+    "version": "1.0.0",
+    "documentation": "https://github.com/hitnrun30/chore_card",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": ["@hitnrun30"]
+  }
+  
