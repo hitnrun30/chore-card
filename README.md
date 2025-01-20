@@ -1,135 +1,125 @@
-# Chore Card
 
-Chore Card is a Home Assistant integration and custom Lovelace card that helps you manage household chores efficiently. It allows you to assign chores to users, track completion, and visualize progress—all integrated into Home Assistant.
+# Chore Card for Home Assistant
 
----
+The **Chore Card** is a customizable Lovelace dashboard card for tracking and managing chores. It allows you to assign chores to users, track points, and reset schedules automatically. This card supports **daily**, **weekly**, and **monthly** chores with advanced customization options.
 
 ## Features
-- Customizable chore categories: Daily, Weekly, and Monthly.
-- User assignment via dropdowns.
-- Automatically resets chores based on the specified start day of the week.
-- Dynamic score tracking for each user.
-- Easy YAML configuration for both the card and integration.
-
----
-
-## Screenshots
-
-### Example Chore Card in Lovelace
-![Chore Card Example](./images/chore_card_example.png)
-
-### Example Scorecard
-![Scorecard Example](./images/scorecard_example.png)
+- Assign chores to users with a dropdown for each day.
+- Highlight monthly chores based on the week of the month.
+- Automatically reset chore schedules on the first day of the week.
+- Track and display points for each user.
+- Support for long and short day names.
+- Fully customizable with **CSS named colors** for backgrounds, headers, and user scores.
 
 ---
 
 ## Installation
 
-### Via HACS
-1. Add this repository to HACS.
-2. Install the **Chore Card** integration and Lovelace card.
-3. Restart Home Assistant.
+1. **Download the Files**:
+   Clone or download the repository and copy the following files to your Home Assistant setup:
+   - `chore-card.js`
+   - `chore-card.css`
 
-### Manual Installation
-1. Copy the `custom_components/chore_card` folder to your Home Assistant `custom_components` directory.
-2. Copy the `www/chore-card/` folder to your Home Assistant `www` directory.
-3. Restart Home Assistant.
+2. **Add to Lovelace Resources**:
+   Navigate to **Settings > Dashboards > Resources** and add:
+   ```yaml
+   URL: /local/chore-card.js
+   Type: JavaScript Module
+   ```
+
+3. **Restart Home Assistant**:
+   Restart Home Assistant to apply the changes.
 
 ---
 
 ## Configuration
 
-### **YAML Options**
-Below are the available options for configuring the Chore Card.
+### Lovelace Configuration Example
+Add the following configuration to your Lovelace dashboard YAML file or via the UI editor:
 
-#### **Basic Options**
-| Option                  | Type    | Description                                                                                          | Default   |
-|-------------------------|---------|------------------------------------------------------------------------------------------------------|-----------|
-| `first_day_of_week`     | String  | The first day of the week for resets. Can be a short or long name (e.g., `Mon`, `Monday`).            | `Monday`  |
-| `show_long_day_names`   | Boolean | Whether to display long day names (e.g., `Monday` vs. `Mon`).                                        | `false`   |
-| `points_position`       | String  | Position of the scorecard. Can be `top` or `bottom`.                                                 | `top`     |
-| `day_header_background_color` | String  | Background color for the day headers. Must be a CSS-named color.                                    | `blue`    |
-| `day_header_font_color` | String  | Font color for the day headers. Must be a CSS-named color.                                           | `white`   |
-
-#### **User Options**
-Each user must be listed under the `users` section:
 ```yaml
-users:
-  - name: Alice
-    background_color: lightpink
-  - name: Bob
-    background_color: lightblue
-```
-| Option             | Type   | Description                                | Default       |
-|--------------------|--------|--------------------------------------------|---------------|
-| `name`             | String | Name of the user.                         | **Required**  |
-| `background_color` | String | Background color for the user’s scorecard. | `transparent` |
-
-#### **Chores Options**
-Define your chores under `daily`, `weekly`, and `monthly` sections:
-```yaml
-chores:
-  daily:
-    - name: Wash Dishes
-      points: 5
-  weekly:
-    - name: Mop Floors
-      points: 10
-  monthly:
-    - name: Clean Windows
-      points: 15
-      week_of_month:
-        week: 2
-        highlight_color: yellow
-```
-| Option                  | Type    | Description                                                                                          | Default       |
-|-------------------------|---------|------------------------------------------------------------------------------------------------------|---------------|
-| `name`                 | String  | The name of the chore.                                                                               | **Required**  |
-| `points`               | Integer | Points awarded for completing the chore.                                                            | `0`           |
-| `week_of_month.week`   | Integer | For monthly chores, specifies the week of the month (e.g., `2` for the second week).                | None          |
-| `week_of_month.highlight_color` | String  | Color to highlight the chore during the specified week. Must be a CSS-named color.                 | `green`       |
-
----
-
-## Example Configuration
-```yaml
-first_day_of_week: Monday
-show_long_day_names: true
-points_position: top
-day_header_background_color: blue
-day_header_font_color: white
-
-users:
-  - name: Alice
-    background_color: lightpink
-  - name: Bob
-    background_color: lightblue
-
-chores:
-  daily:
-    - name: Wash Dishes
-      points: 5
-  weekly:
-    - name: Mop Floors
-      points: 10
-  monthly:
-    - name: Clean Windows
-      points: 15
-      week_of_month:
-        week: 2
-        highlight_color: yellow
+title: Home Dashboard
+views:
+  - title: Chore Tracker
+    path: chore-tracker
+    badges: []
+    cards:
+      - type: custom:chore-card
+        card-id: chore-card-12345
+        title: Chore Tracker
+        config:
+          first_day_of_week: Monday
+          show_long_day_names: true
+          points_position: top
+          day_header_background_color: lightblue
+          day_header_font_color: black
+          users:
+            - name: Alice
+              background_color: lightpink
+            - name: Bob
+              background_color: lightgreen
+          chores:
+            daily:
+              - name: Wash Dishes
+                points: 5
+              - name: Sweep Floor
+                points: 3
+            weekly:
+              - name: Mop Floors
+                points: 10
+                day: Monday
+              - name: Vacuum
+                points: 8
+            monthly:
+              - name: Clean Windows
+                points: 15
+                week_of_month:
+                  week: 1
+                  highlight_color: green
+              - name: Organize Garage
+                points: 20
+                week_of_month:
+                  week: 3
+                  highlight_color: orange
+                max_days: 2
 ```
 
 ---
 
-## Sensor Attributes
-The Chore Card integration provides a sensor for each card. Below are the attributes exposed by the sensor.
+## Functionality
 
-| Attribute      | Description                                                |
-|----------------|------------------------------------------------------------|
-| `chores`       | The list of all configured chores for the card.            |
-| `users`        | The list of users associated with the card.                |
-| `last_reset`   | The last time the chores were reset automatically.          |
+### General
+- The card dynamically adjusts the UI based on the day of the week and chore schedule.
+- Points are updated automatically whenever a dropdown selection is made.
+- The dropdowns reset when the first day of the week occurs.
+
+### Daily Chores
+- Standard daily tasks that reset every week.
+
+### Weekly Chores
+- Dropdowns are disabled when:
+  - A name is selected for the day.
+  - The chore is scheduled for a specific day and a selection is made.
+- Weekly chores automatically reset on the first day of the week.
+
+### Monthly Chores
+- Chores are highlighted during their specified week using `week_of_month` and `highlight_color`.
+- If `max_days` is defined, dropdowns disable once the maximum days are completed.
+- Reset behavior is based on the first day of the week.
+
+---
+
+## Customization Options
+
+| Option                      | Type    | Default        | Description                                                |
+|-----------------------------|---------|----------------|------------------------------------------------------------|
+| `first_day_of_week`         | String  | `Monday`       | Sets the starting day of the week.                        |
+| `show_long_day_names`       | Boolean | `false`        | Toggles between short (`Mon`) and long (`Monday`) day names.|
+| `points_position`           | String  | `top`          | Positions the points display (`top` or `bottom`).          |
+| `day_header_background_color` | String | `blue`         | Background color for the day headers.                     |
+| `day_header_font_color`     | String  | `white`        | Font color for the day headers.                           |
+| `users`                     | List    | `[]`           | List of users with optional background colors.             |
+| `chores`                    | Object  | `{}`           | Definitions for `daily`, `weekly`, and `monthly` chores.   |
 
 ---
 

@@ -4,6 +4,17 @@
     "domains": ["chore_card"],
     "iot_class": "local_polling",
     "render_readme": true,
+    "version": "1.0.0",   
+    "resources": [
+      {
+        "type": "module",
+        "url": "/custom_components/www/chore-card/chore-card.js"
+      },
+      {
+        "type": "css",
+        "url": "/custom_components/www/chore-card/chore-card.css"
+      }
+    ],
     "documentation": "https://github.com/hitnrun30/chore_card",
     "issue_tracker": "https://github.com/hitnrun30/chore_card/issues",
     "release_notes": "https://github.com/hitnrun30/chore_card/releases"
