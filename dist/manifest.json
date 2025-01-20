@@ -1,9 +1,7 @@
 {
     "domain": "chore_card",
     "name": "Chore Card",
-    "version": "1.0.0",   
-    "content_in_root": false,
-    "filename": "chore-card.js",
+    "version": "1.0.1",   
     "resources": [
       {
         "type": "module",
@@ -14,10 +12,8 @@
         "url": "/custom_components/www/chore-card/chore-card.css"
       }
     ],
-    "domains": [],
-    "homeassistant": "2021.12.0",
+    "homeassistant": "2025.1.0",
     "render_readme": true,
-    "country": [],
     "zip_release": false,
     "iot_class": "local_polling",
     "documentation": "https://github.com/hitnrun30/chore_card",
