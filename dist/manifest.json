@@ -1,7 +1,7 @@
 {
     "domain": "chore_card",
     "name": "Chore Card",
-    "version": "1.0.1",   
+    "version": "1.0.2",   
     "resources": [
       {
         "type": "module",
