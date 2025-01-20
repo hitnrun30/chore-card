@@ -5,11 +5,11 @@
     "resources": [
       {
         "type": "module",
-        "url": "/custom_components/www/chore-card/chore-card.js"
+        "url": "/hacsfiles/chore-card/chore-card.js"
       },
       {
         "type": "css",
-        "url": "/custom_components/www/chore-card/chore-card.css"
+        "url": "/hacsfiles/chore-card/chore-card.css"
       }
     ],
     "homeassistant": "2025.1.0",
