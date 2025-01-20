@@ -55,6 +55,23 @@ class ChoreCard extends HTMLElement {
     }
   }
 
+  setConfig(config) {
+    // Process the configuration passed in the YAML
+    this.config = config;
+
+    // Ensure required properties are set, or provide defaults
+    this.firstDayOfWeek = config.first_day_of_week || 'Monday';
+    this.showLongDayNames = config.show_long_day_names || false;
+    this.pointsPosition = config.points_position || 'top';
+    this.dayHeaderBackgroundColor = config.day_header_background_color || 'blue';
+    this.dayHeaderFontColor = config.day_header_font_color || 'white';
+
+    console.log('Configuration set:', this.config);
+
+    // Re-render the card
+    this.render();
+  }
+
   // Add the CSS file to the shadowRoot
   attachStyles() {
     const link = document.createElement('link');
