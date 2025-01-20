@@ -1,6 +1,6 @@
 import * as jsYaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 
-class ChoreCard extends HTMLElement {
+export class ChoreCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -71,6 +71,12 @@ class ChoreCard extends HTMLElement {
     // Re-render the card
     this.render();
   }
+
+  getCardSize() {
+    // Return an estimate of the card's height in rows
+    return 5; // Adjust based on your card's layout
+  }
+
 
   // Add the CSS file to the shadowRoot
   attachStyles() {

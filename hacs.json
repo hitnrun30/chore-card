@@ -1,10 +1,11 @@
 {
     "name": "Chore Card",
     "content_in_root": false,
-    "domains": ["chore_card"],
-    "iot_class": "local_polling",
+    "filename": "chore-card.js",
+    "domains": [],
+    "iot_class": "Local Polling",
     "render_readme": true,
-    "zip_release": false,
+    "version": "1.0.3",
     "documentation": "https://github.com/hitnrun30/chore_card",
     "issue_tracker": "https://github.com/hitnrun30/chore_card/issues",
     "release_notes": "https://github.com/hitnrun30/chore_card/releases"
