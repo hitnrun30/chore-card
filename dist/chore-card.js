@@ -112,6 +112,8 @@ export class ChoreCard extends HTMLElement {
   async loadStateFromHomeAssistant(yamlData) {
     const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
     console.log(`Attempting to load state for: ${stateUrl}`);
+    console.log('HA Token:', this.haToken);
+
 
     try {
         const response = await fetch(stateUrl, {
