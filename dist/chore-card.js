@@ -18,13 +18,14 @@ export class ChoreCard extends HTMLElement {
     this.userPoints = {}; // Default: no points tracked
     this.lastReset = null; // Default: no reset date
     this.lastSavedState = null; // Default: no saved state loaded
+    this.initialized = false; // Initialize as false
 
     // Dynamically determine base URL and card ID
     this.apiBaseUrl = this.getAttribute('api-base-url') || ''; // Default: Home Assistant API
     this.cardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
 
     // Placeholder for Home Assistant token
-    this.haToken = ''; // Authorization token for API requests
+    this.haToken = this.hass.connection.auth.token; // Authorization token for API requests
 
     // Dynamically set the script URL and CSS file path
     const scriptUrl = new URL(import.meta.url);
@@ -84,13 +85,30 @@ export class ChoreCard extends HTMLElement {
     link.rel = 'stylesheet';
 
     // Dynamically determine the path to the CSS file
-    const scriptPath = import.meta.url;
-    const cssPath = scriptPath.replace(/\.js$/, '.css'); // Replace .js with .css
-    link.href = cssPath;
+    // const scriptPath = import.meta.url;
+    // const cssPath = scriptPath.replace(/\.js$/, '.css'); // Replace .js with .css
+    // link.href = cssPath;
+
+    link.href = '/hacsfiles/chore-card/chore-card.css';
 
     this.shadowRoot.appendChild(link);        
   }
 
+  set hass(hass) {
+    this._hass = hass;
+
+    if (!this.initialized) {
+        this.apiBaseUrl = hass.connection.options.baseUrl;
+        this.haToken = hass.connection.auth.token;
+        this.initializeCard(); // Ensure initialization happens after hass is set
+        this.initialized = true;
+    }
+  }
+
+  get hass() {
+    return this._hass;
+  }
+  
   async loadStateFromHomeAssistant(yamlData) {
     const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
     console.log(`Attempting to load state for: ${stateUrl}`);
