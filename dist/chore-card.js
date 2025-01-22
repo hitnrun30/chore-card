@@ -44,7 +44,7 @@ export class ChoreCard extends HTMLElement {
         console.log('Initializing Chore Card...');
 
         // Load YAML configuration
-        const yamlData = this.getAttribute('yaml-data') ? jsYaml.load(this.getAttribute('yaml-data')) : {};
+        const yamlData = this.config || {};
         console.log('YAML data:', yamlData);
 
         // Load state from Home Assistant if a token is available
