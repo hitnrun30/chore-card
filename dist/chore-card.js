@@ -29,7 +29,7 @@ export class ChoreCard extends HTMLElement {
 
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set
-    if (this.hass.auth?.data?.access_token) {
+    if (this.hass?.auth?.data?.access_token) {
         this.haToken = this.hass.auth.data.access_token ;
     }
 
