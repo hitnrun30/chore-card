@@ -31,9 +31,8 @@ export class ChoreCard extends HTMLElement {
     if (this.hass?.connection?.auth?.token) {
         this.haToken = this.hass.connection.auth.token;
     }
-    
+
     // Dynamically resolve paths
-    this.scriptUrl = `${BASE_PATH}chore-card.js`;
     this.cssPath = `${BASE_PATH}chore-card.css`;
 
     // Initialize the card state and render
@@ -105,15 +104,17 @@ export class ChoreCard extends HTMLElement {
     this._hass = hass;
 
     if (!this.initialized) {
-        this.apiBaseUrl = hass.connection?.options?.baseUrl || '';
-        this.haToken = hass.connection?.auth?.token || localStorage.getItem('haToken');
-
-        // Save token to localStorage for fallback
-        if (this.haToken) {
-            localStorage.setItem('haToken', this.haToken);
+        if (hass?.connection?.auth?.token) {
+            this.apiBaseUrl = hass.connection.options.baseUrl;
+            this.haToken = hass.connection.auth.token;
+            console.log("Token successfully initialized in hass setter.");
+        } else {
+            console.warn("Home Assistant token is not available.");
         }
 
-        this.initializeCard();
+        // Initialize the card only when `hass` is set
+        this.initializeCard()
+            .catch((error) => console.error("Error during card initialization in hass setter:", error));
         this.initialized = true;
     }
   }
