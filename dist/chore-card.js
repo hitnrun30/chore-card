@@ -101,10 +101,7 @@ export class ChoreCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-
-    // Debugging: Log the hass object
-    console.log('hass object:', hass);
-
+    
     if (!this.initialized && hass) {
         try {
             // Correct token retrieval path
@@ -133,22 +130,42 @@ export class ChoreCard extends HTMLElement {
     }
   }
 
-
   get hass() {
     return this._hass;
   }
   
+  createDefaultState(yamlData) {
+    console.log("Creating default state...");
+
+    return {
+        firstDayOfWeek: yamlData.first_day_of_week
+            ? this.normalizeDayName(yamlData.first_day_of_week)
+            : "Mon",
+        showLongDayNames: yamlData.show_long_day_names ?? false,
+        pointsPosition: yamlData.points_position ?? "bottom",
+        dayHeaderBackgroundColor: this.isValidCssColor(yamlData.day_header_background_color)
+            ? yamlData.day_header_background_color
+            : "blue",
+        dayHeaderFontColor: this.isValidCssColor(yamlData.day_header_font_color)
+            ? yamlData.day_header_font_color
+            : "white",
+        users: yamlData.users || [],
+        chores: yamlData.chores || [],
+    };
+  }
+
   async loadStateFromHomeAssistant(yamlData) {
-    const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
-    console.log(`Attempting to load state for: ${stateUrl}`);
-    
     try {
+      const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
+      console.log(`Attempting to load state for: ${stateUrl}`);
+
+      // If no token, use default state
       if (!this.haToken) {
-        console.warn('No token available. Using default state.');
-        this.lastSavedState = this.createDefaultState(yamlData);
-        return;
+          console.warn('No token available. Using default state.');
+          this.lastSavedState = this.createDefaultState(yamlData);
+          return;
       }
-    
+
       const response = await fetch(stateUrl, {
           method: 'GET',
           headers: {
@@ -169,17 +186,18 @@ export class ChoreCard extends HTMLElement {
           throw new Error(`Failed to load state: ${response.statusText}`);
       }
 
-      // Use `checkAndUpdateOptions` to ensure the constructor variables are consistent
+      // Validate and update options, users, and chores
       const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
       const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
       const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
 
+      // Save state if any changes are detected
       if (optionsChanged || usersChanged || choresChanged) {
-          console.log('Options updated. Saving updated state...');
+          console.log('Changes detected. Saving updated state...');
           this.lastSavedState = savedState || this.createDefaultState(yamlData);
-          await this.saveStateToHomeAssistant(); // Save the updated state
+          await this.saveStateToHomeAssistant();
       } else {
-          console.log('Options are consistent. No update needed.');
+          console.log('No changes detected. State is consistent.');
       }
     } catch (error) {
         console.error(`Error loading state for card: ${this.cardId}`, error);
