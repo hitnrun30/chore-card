@@ -29,8 +29,8 @@ export class ChoreCard extends HTMLElement {
 
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set
-    if (this.hass?.connection?.auth?.token) {
-        this.haToken = this.hass.connection.auth.token;
+    if (this.hass.auth?.data?.access_token) {
+        this.haToken = this.hass.auth.data.access_token ;
     }
 
     // Dynamically resolve paths
@@ -103,24 +103,38 @@ export class ChoreCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    
-    console.log('hass object:', hass); // Log the full object to debug
-    
-    if (!this.initialized) {
-        if (hass?.connection?.auth?.token) {
-            this.apiBaseUrl = hass.connection.options.baseUrl;
-            this.haToken = hass.connection.auth.token;
-            console.log("Token successfully initialized in hass setter.");
-        } else {
-            console.warn("Home Assistant token is not available.");
-        }
 
-        // Initialize the card only when `hass` is set
-        this.initializeCard()
-            .catch((error) => console.error("Error during card initialization in hass setter:", error));
-        this.initialized = true;
+    // Debugging: Log the hass object
+    console.log('hass object:', hass);
+
+    if (!this.initialized && hass) {
+        try {
+            // Correct token retrieval path
+            this.haToken = hass.auth?.data?.access_token || null;
+
+            if (this.haToken) {
+                console.log('Successfully retrieved Home Assistant token:', this.haToken);
+            } else {
+                console.warn('Home Assistant token is not available.');
+            }
+
+            // Determine the API base URL
+            this.apiBaseUrl = hass.auth?.data?.hassUrl || '';
+            if (this.apiBaseUrl) {
+                console.log('Using API base URL:', this.apiBaseUrl);
+            } else {
+                console.warn('API base URL is not available.');
+            }
+
+            // Additional setup or initialization
+            this.initializeCard();
+            this.initialized = true;
+        } catch (error) {
+            console.error('Error retrieving Home Assistant token or base URL:', error);
+        }
     }
   }
+
 
   get hass() {
     return this._hass;
