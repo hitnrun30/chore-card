@@ -6,8 +6,8 @@ export class ChoreCard extends HTMLElement {
   constructor() {
     super();
     console.log('Chore Card created');
-    console.log('hass object:', hass);
     
+
     this.attachShadow({ mode: 'open' });
 
     // Default values for the card configuration
@@ -30,10 +30,7 @@ export class ChoreCard extends HTMLElement {
     this.cardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
 
     // Placeholder for Home Assistant token
-    this.haToken = null; // Default to null until hass is set
-    if (this.hass?.auth?.data?.access_token) {
-        this.haToken = this.hass.auth.data.access_token ;
-    }
+    this.haToken = null; // Default to null until hass is set    
 
     // Dynamically resolve paths
     this.cssPath = `${BASE_PATH}chore-card.css`;
