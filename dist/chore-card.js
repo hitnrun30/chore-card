@@ -1,5 +1,7 @@
 import * as jsYaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 
+const BASE_PATH = '/hacsfiles/chore-card/';
+
 export class ChoreCard extends HTMLElement {
   constructor() {
     super();
@@ -27,10 +29,9 @@ export class ChoreCard extends HTMLElement {
     // Placeholder for Home Assistant token
     this.haToken = this.hass.connection.auth.token; // Authorization token for API requests
 
-    // Dynamically set the script URL and CSS file path
-    const scriptUrl = new URL(import.meta.url);
-    this.scriptUrl = scriptUrl.href;
-    this.cssPath = `${scriptUrl.origin}${scriptUrl.pathname.replace(/\.js$/, '.css')}`;
+    // Dynamically resolve paths
+    this.scriptUrl = `${BASE_PATH}chore-card.js`;
+    this.cssPath = `${BASE_PATH}chore-card.css`;
 
     // Initialize the card state and render
     this.initializeCard()
@@ -57,21 +58,25 @@ export class ChoreCard extends HTMLElement {
   }
 
   setConfig(config) {
-    // Process the configuration passed in the YAML
+    if (!config.type || config.type !== 'custom:chore-card') {
+      throw new Error("Specify type: 'custom:chore-card' in your configuration.");
+    }
+  
     this.config = config;
-
-    // Ensure required properties are set, or provide defaults
-    this.firstDayOfWeek = config.first_day_of_week || 'Monday';
+  
+    // Set configuration options with defaults
+    this.firstDayOfWeek = config.first_day_of_week || 'Mon';
     this.showLongDayNames = config.show_long_day_names || false;
     this.pointsPosition = config.points_position || 'top';
     this.dayHeaderBackgroundColor = config.day_header_background_color || 'blue';
     this.dayHeaderFontColor = config.day_header_font_color || 'white';
-
+  
     console.log('Configuration set:', this.config);
-
-    // Re-render the card
+  
+    // Render the card after applying the config
     this.render();
   }
+  
 
   getCardSize() {
     // Return an estimate of the card's height in rows
@@ -82,16 +87,10 @@ export class ChoreCard extends HTMLElement {
   // Add the CSS file to the shadowRoot
   attachStyles() {
     const link = document.createElement('link');
+    link.type = "text/css";
     link.rel = 'stylesheet';
-
-    // Dynamically determine the path to the CSS file
-    // const scriptPath = import.meta.url;
-    // const cssPath = scriptPath.replace(/\.js$/, '.css'); // Replace .js with .css
-    // link.href = cssPath;
-
-    link.href = '/hacsfiles/chore-card/chore-card.css';
-
-    this.shadowRoot.appendChild(link);        
+    link.href = this.cssPath;
+    this.shadowRoot.appendChild(link);
   }
 
   set hass(hass) {
