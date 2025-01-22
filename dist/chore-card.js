@@ -27,7 +27,7 @@ export class ChoreCard extends HTMLElement {
     this.cardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
 
     // Placeholder for Home Assistant token
-    this.haToken = this.hass.connection.auth.token; // Authorization token for API requests
+    this.haToken = this._hass.connection.auth.token; // Authorization token for API requests
 
     // Dynamically resolve paths
     this.scriptUrl = `${BASE_PATH}chore-card.js`;
