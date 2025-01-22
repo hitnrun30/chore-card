@@ -136,23 +136,35 @@ export class ChoreCard extends HTMLElement {
   }
   
   createDefaultState(yamlData) {
-    console.log("Creating default state...");
+    console.log('Creating default state...');
+    
+    // Set constructor variables directly from YAML or fallback to defaults
+    this.firstDayOfWeek = yamlData.first_day_of_week
+        ? this.normalizeDayName(yamlData.first_day_of_week)
+        : 'Mon';
+    this.showLongDayNames = yamlData.show_long_day_names || false;
+    this.pointsPosition = yamlData.points_position || 'bottom';
+    this.dayHeaderBackgroundColor = yamlData.day_header_background_color || 'blue';
+    this.dayHeaderFontColor = yamlData.day_header_font_color || 'white';
 
-    return {
-        firstDayOfWeek: yamlData.first_day_of_week
-            ? this.normalizeDayName(yamlData.first_day_of_week)
-            : "Mon",
-        showLongDayNames: yamlData.show_long_day_names ?? false,
-        pointsPosition: yamlData.points_position ?? "bottom",
-        dayHeaderBackgroundColor: this.isValidCssColor(yamlData.day_header_background_color)
-            ? yamlData.day_header_background_color
-            : "blue",
-        dayHeaderFontColor: this.isValidCssColor(yamlData.day_header_font_color)
-            ? yamlData.day_header_font_color
-            : "white",
-        users: yamlData.users || [],
-        chores: yamlData.chores || [],
+    this.users = yamlData.users || []; // Default to empty array
+    this.chores = yamlData.chores || []; // Default to empty array
+
+    // Construct and return the default state object
+    const defaultState = {
+        options: {
+            firstDayOfWeek: this.firstDayOfWeek,
+            showLongDayNames: this.showLongDayNames,
+            pointsPosition: this.pointsPosition,
+            dayHeaderBackgroundColor: this.dayHeaderBackgroundColor,
+            dayHeaderFontColor: this.dayHeaderFontColor,
+        },
+        users: this.users,
+        chores: this.chores,
     };
+
+    console.log('Default state created:', defaultState);
+    return defaultState;
   }
 
   async loadStateFromHomeAssistant(yamlData) {
