@@ -58,8 +58,9 @@ export class ChoreCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.type || config.type !== 'custom:chore-card') {
-      throw new Error("Specify type: 'custom:chore-card' in your configuration.");
+    // Validate and apply the configuration
+    if (!config || !config.type) {
+      throw new Error('Invalid card configuration');
     }
   
     this.config = config;
@@ -96,9 +97,9 @@ export class ChoreCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
 
-    if (!this.initialized) {
-        this.apiBaseUrl = hass.connection.options.baseUrl;
-        this.haToken = hass.connection.auth.token;
+    if (this._hass && !this.initialized) {
+        this.apiBaseUrl = this._hass.connection?.options?.baseUrl || '';
+        this.haToken = this._hass.connection?.auth?.token || '';
         this.initializeCard(); // Ensure initialization happens after hass is set
         this.initialized = true;
     }
