@@ -27,8 +27,11 @@ export class ChoreCard extends HTMLElement {
     this.cardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
 
     // Placeholder for Home Assistant token
-    this.haToken = this._hass.connection?.auth?.token || ''; // Authorization token for API requests
-
+    this.haToken = null; // Default to null until hass is set
+    if (this.hass?.connection?.auth?.token) {
+        this.haToken = this.hass.connection.auth.token;
+    }
+    
     // Dynamically resolve paths
     this.scriptUrl = `${BASE_PATH}chore-card.js`;
     this.cssPath = `${BASE_PATH}chore-card.css`;
@@ -46,10 +49,14 @@ export class ChoreCard extends HTMLElement {
         const yamlData = this.getAttribute('yaml-data') ? jsYaml.load(this.getAttribute('yaml-data')) : {};
         console.log('YAML data:', yamlData);
 
-        // Load state from Home Assistant
-        await this.loadStateFromHomeAssistant(yamlData);
+        // Load state from Home Assistant if a token is available
+        if (this.haToken) {
+            await this.loadStateFromHomeAssistant(yamlData);
+        } else {
+            console.warn('No Home Assistant token available; skipping state loading.');
+        }
+
         this.checkForReset();
-        // Render the card with updated state
         this.render();
         console.log('Card initialization complete.');
     } catch (error) {
@@ -97,10 +104,16 @@ export class ChoreCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
 
-    if (this._hass && !this.initialized) {
-        this.apiBaseUrl = this._hass.connection?.options?.baseUrl || '';
-        this.haToken = this._hass.connection?.auth?.token || '';
-        this.initializeCard(); // Ensure initialization happens after hass is set
+    if (!this.initialized) {
+        this.apiBaseUrl = hass.connection?.options?.baseUrl || '';
+        this.haToken = hass.connection?.auth?.token || localStorage.getItem('haToken');
+
+        // Save token to localStorage for fallback
+        if (this.haToken) {
+            localStorage.setItem('haToken', this.haToken);
+        }
+
+        this.initializeCard();
         this.initialized = true;
     }
   }
@@ -112,48 +125,57 @@ export class ChoreCard extends HTMLElement {
   async loadStateFromHomeAssistant(yamlData) {
     const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
     console.log(`Attempting to load state for: ${stateUrl}`);
-    console.log('HA Token:', this.haToken);
-
-
+    
     try {
-        const response = await fetch(stateUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.haToken}`,
-            },
-        });
+      if (!this.haToken) {
+        console.warn('No token available. Using default state.');
+        this.lastSavedState = this.createDefaultState(yamlData);
+        return;
+      }
+    
+      const response = await fetch(stateUrl, {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.haToken}`,
+          },
+      });
 
-        let savedState = null;
+      let savedState = null;
 
-        if (response.ok) {
-            const state = await response.json();
-            savedState = JSON.parse(state.state);
-            console.log('State loaded from Home Assistant:', savedState);
-        } else if (response.status === 404) {
-            console.warn(`No saved state found for card: ${this.cardId}`);
-        } else {
-            throw new Error(`Failed to load state: ${response.statusText}`);
-        }
+      if (response.ok) {
+          const state = await response.json();
+          savedState = JSON.parse(state.state);
+          console.log('State loaded from Home Assistant:', savedState);
+      } else if (response.status === 404) {
+          console.warn(`No saved state found for card: ${this.cardId}`);
+      } else {
+          throw new Error(`Failed to load state: ${response.statusText}`);
+      }
 
-        // Use `checkAndUpdateOptions` to ensure the constructor variables are consistent
-        const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
-        const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
-        const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
+      // Use `checkAndUpdateOptions` to ensure the constructor variables are consistent
+      const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
+      const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
+      const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
 
-        if (optionsChanged || usersChanged || choresChanged) {
-            console.log('Options updated. Saving updated state...');
-            this.lastSavedState = savedState || this.createDefaultState(yamlData);
-            await this.saveStateToHomeAssistant(); // Save the updated state
-        } else {
-            console.log('Options are consistent. No update needed.');
-        }
+      if (optionsChanged || usersChanged || choresChanged) {
+          console.log('Options updated. Saving updated state...');
+          this.lastSavedState = savedState || this.createDefaultState(yamlData);
+          await this.saveStateToHomeAssistant(); // Save the updated state
+      } else {
+          console.log('Options are consistent. No update needed.');
+      }
     } catch (error) {
         console.error(`Error loading state for card: ${this.cardId}`, error);
     }
   }
 
   async saveStateToHomeAssistant() {
+    if (!this.haToken) {
+      console.warn('No token available. State changes will not be saved to Home Assistant.');
+      return;
+    }
+
     const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
     console.log(`Saving state to: ${stateUrl}`);
 
