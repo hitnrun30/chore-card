@@ -6,6 +6,8 @@ export class ChoreCard extends HTMLElement {
   constructor() {
     super();
     console.log('Chore Card created');
+    console.log('hass object:', hass);
+    
     this.attachShadow({ mode: 'open' });
 
     // Default values for the card configuration
