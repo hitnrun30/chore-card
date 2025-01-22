@@ -5,8 +5,7 @@ const BASE_PATH = '/hacsfiles/chore-card/';
 export class ChoreCard extends HTMLElement {
   constructor() {
     super();
-    console.log('Chore Card created');
-    
+    console.log('Chore Card created');    
 
     this.attachShadow({ mode: 'open' });
 
