@@ -5,6 +5,7 @@ const BASE_PATH = '/hacsfiles/chore-card/';
 export class ChoreCard extends HTMLElement {
   constructor() {
     super();
+    console.log('Chore Card created');
     this.attachShadow({ mode: 'open' });
 
     // Default values for the card configuration
@@ -102,7 +103,9 @@ export class ChoreCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-
+    
+    console.log('hass object:', hass); // Log the full object to debug
+    
     if (!this.initialized) {
         if (hass?.connection?.auth?.token) {
             this.apiBaseUrl = hass.connection.options.baseUrl;
