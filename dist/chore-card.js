@@ -177,30 +177,36 @@ export class ChoreCard extends HTMLElement {
       let savedState = null;
 
       if (response.ok) {
-          const state = await response.json();
-          savedState = JSON.parse(state.state);
-          console.log('State loaded from Home Assistant:', savedState);
+        const state = await response.json();
+        savedState = JSON.parse(state.state);
+        console.log('State loaded from Home Assistant:', savedState);
+
+          // Validate and update options, users, and chores
+        const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
+        const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
+        const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
+
+        // Save state if any changes are detected
+        if (optionsChanged || usersChanged || choresChanged) {
+            console.log('Changes detected. Saving updated state...');
+            this.lastSavedState = savedState || this.createDefaultState(yamlData);
+            await this.saveStateToHomeAssistant();
+        } else {
+            console.log('No changes detected. State is consistent.');
+        }
+
+        return savedState;
       } else if (response.status === 404) {
-          console.warn(`No saved state found for card: ${this.cardId}`);
+        console.warn(`No saved state found for card: ${this.cardId}`);
+        console.log('Creating and returning default state:', defaultState);
+        return this.createDefaultState(yamlData); // Fallback to default state
       } else {
-          throw new Error(`Failed to load state: ${response.statusText}`);
+        throw new Error(`Failed to load state: ${response.statusText}`);
       }
 
-      // Validate and update options, users, and chores
-      const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
-      const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
-      const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
-
-      // Save state if any changes are detected
-      if (optionsChanged || usersChanged || choresChanged) {
-          console.log('Changes detected. Saving updated state...');
-          this.lastSavedState = savedState || this.createDefaultState(yamlData);
-          await this.saveStateToHomeAssistant();
-      } else {
-          console.log('No changes detected. State is consistent.');
-      }
     } catch (error) {
         console.error(`Error loading state for card: ${this.cardId}`, error);
+        return this.createDefaultState(yamlData); // Fallback to default state
     }
   }
 
