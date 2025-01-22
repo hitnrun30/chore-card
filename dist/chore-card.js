@@ -1,5 +1,15 @@
 import * as jsYaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
 
+function loadCSS(url) {
+  const link = document.createElement("link");
+  link.type = "text/css";
+  link.rel = "stylesheet";
+  link.href = url;
+  document.head.appendChild(link);
+}
+
+loadCSS("/hacsfiles/chore-card/chore-card.css");
+
 export class ChoreCard extends HTMLElement {
   constructor() {
     super();
@@ -592,7 +602,7 @@ export class ChoreCard extends HTMLElement {
     this.shadowRoot.innerHTML = '';
 
     // Attach styles dynamically
-    this.attachStyles();
+    // this.attachStyles();
 
     // Prepare the grid content
     const scorecard = this.renderScorecard();
