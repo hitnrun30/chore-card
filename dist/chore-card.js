@@ -226,14 +226,15 @@ export class ChoreCard extends HTMLElement {
 
   async saveStateToHomeAssistant() {
     if (!this.haToken) {
-      console.warn('No token available. State changes will not be saved to Home Assistant.');
-      return;
+        console.warn('No token available. State changes will not be saved to Home Assistant.');
+        return;
     }
 
     const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
     console.log(`Saving state to: ${stateUrl}`);
 
     try {
+        // Prepare the state payload
         const state = {
             cardId: this.cardId,
             data: this.data || {}, // Chore data
@@ -249,20 +250,33 @@ export class ChoreCard extends HTMLElement {
 
         console.log('State to be saved:', state);
 
+        // Construct the payload for the POST request
+        const payload = {
+            state: 'active', // Use a valid string to represent the card's state
+            attributes: state, // Include the actual state as attributes
+        };
+
+        console.log('Payload to be sent:', payload);
+
+        // Send POST request
         const response = await fetch(stateUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.haToken}`, // Include token if required
+                Authorization: `Bearer ${this.haToken}`, // Include the token
             },
-            body: JSON.stringify({ state: JSON.stringify(state) }),
+            body: JSON.stringify(payload),
         });
 
+        // Handle the response
         if (!response.ok) {
+            const errorDetails = await response.text();
+            console.error(`Failed to save state: ${response.status} ${response.statusText}`);
+            console.error('Error details:', errorDetails);
             throw new Error(`Failed to save state: ${response.statusText}`);
         }
 
-        console.log(`State saved for card: ${this.cardId}`);
+        console.log(`State saved successfully for card: ${this.cardId}`);
         this.lastSavedState = state; // Update the in-memory saved state
     } catch (error) {
         console.error(`Error saving state for card: ${this.cardId}`, error);
