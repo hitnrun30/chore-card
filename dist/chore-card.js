@@ -149,19 +149,20 @@ export class ChoreCard extends HTMLElement {
     this.dayHeaderFontColor = yamlData.day_header_font_color || 'white';
 
     this.users = yamlData.users || []; // Default to empty array
-    this.chores = yamlData.chores || []; // Default to empty array
+    this.data = yamlData.chores || []; // Default to empty array
 
     // Construct and return the default state object
     const defaultState = {
-        options: {
-            firstDayOfWeek: this.firstDayOfWeek,
-            showLongDayNames: this.showLongDayNames,
-            pointsPosition: this.pointsPosition,
-            dayHeaderBackgroundColor: this.dayHeaderBackgroundColor,
-            dayHeaderFontColor: this.dayHeaderFontColor,
-        },
+        cardId: this.cardId,    
+        firstDayOfWeek: this.firstDayOfWeek,
+        showLongDayNames: this.showLongDayNames,
+        pointsPosition: this.pointsPosition,
+        dayHeaderBackgroundColor: this.dayHeaderBackgroundColor,
+        dayHeaderFontColor: this.dayHeaderFontColor,  
+        lastReset: this.lastReset || null,  
         users: this.users,
-        chores: this.chores,
+        userPoints: {},
+        data: this.data,
     };
 
     console.log('Default state created:', defaultState);
@@ -193,7 +194,8 @@ export class ChoreCard extends HTMLElement {
         } else {
             throw new Error(`Failed to load state: ${response.statusText}`);
         }
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error loading state:', error);
 
         // Create default state and assign it
