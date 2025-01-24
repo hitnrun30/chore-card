@@ -207,6 +207,7 @@ export class ChoreCard extends HTMLElement {
             this.lastSavedState = savedState;
             await this.saveStateToHomeAssistant();
             console.log('Default state saved to Home Assistant.');
+            savedState = this.lastSavedState;
         } catch (saveError) {
             console.error('Failed to save default state to Home Assistant:', saveError);
         }
