@@ -191,21 +191,21 @@ export class ChoreCard extends HTMLElement {
             },
         });
 
-        console.log('Set response: ', response.status);
+        console.log('Response to parse:', response);
 
         if (response.ok) {
-          const text = await response.text(); // Get the raw text response
-          console.log('Raw response:', text);
-      
-          try {
-              const state = JSON.parse(text); // Parse manually
-              console.log('Parsed state:', state);
-              savedState = JSON.parse(state.state);
-              console.log('State loaded from Home Assistant:', savedState);
-          } catch (error) {
-              console.error('Error parsing response as JSON:', error);
-              throw error; // Re-throw the error for debugging
-          }            
+          const sensorState = await response.json();
+          console.log('Raw state response:', sensorState);
+
+          const savedState = sensorState.attributes; // Only parse attributes
+          console.log('Parsed saved state:', savedState);
+
+          // Ensure savedState is valid before proceeding
+          if (!savedState || typeof savedState !== 'object') {
+              throw new Error('Invalid saved state format.');
+          }
+
+          this.lastSavedState = savedState; // Assign saved state            
         } else if (response.status === 404) {
             console.warn(`No saved state found for card: ${this.cardId}`);
             throw new Error('State not found (404).'); // Trigger catch block for consistency
