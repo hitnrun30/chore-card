@@ -324,9 +324,14 @@ export class ChoreCard extends HTMLElement {
 
     let optionsChanged = false;
 
+    // Ensure savedState is initialized and has a valid structure
+    if (!savedState || typeof savedState !== 'object') {
+      savedState = {}; // Initialize it as an empty object
+    }
+
     stateOptions.forEach(({ yamlKey, stateKey }) => {
         let yamlValue = yamlData[yamlKey];
-        let savedValue = savedState ? savedState[stateKey] : undefined;
+        let savedValue = savedState[stateKey];
 
         // Normalize `first_day_of_week`
         if (stateKey === 'firstDayOfWeek') {            
