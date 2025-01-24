@@ -504,6 +504,9 @@ export class ChoreCard extends HTMLElement {
           // Update the saved state with the filtered and updated chores
           savedState.data[section] = updatedChores;
 
+          console.log('Before update, this.data:', JSON.stringify(this.data));
+          console.log('Is this.data frozen:', Object.isFrozen(this.data));
+
           // Update the cloned data object
           this.data[section] = updatedChores;
       });
