@@ -421,6 +421,10 @@ export class ChoreCard extends HTMLElement {
 
     choreSections.forEach((section) => {
         const yamlChores = yamlData.chores?.[section] || [];
+        
+        console.log('Before update, this.data:', JSON.stringify(this.data));
+        console.log('Is this.data frozen:', Object.isFrozen(this.data));
+    
         savedState.data[section] = savedState.data[section] || []; // Ensure section exists
         const savedChores = [...savedState.data[section]];
 
