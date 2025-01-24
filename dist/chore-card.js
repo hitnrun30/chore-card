@@ -396,7 +396,9 @@ export class ChoreCard extends HTMLElement {
     });
 
     // Sort users alphabetically by name
+    savedUsers = savedState?.users || yamlData?.users || [];
     savedUsers = [...savedUsers].sort((a, b) => a.name.localeCompare(b.name));
+
 
     // Ensure the saved state and constructor values are synchronized
     if (usersChanged || !this.users.length) {
