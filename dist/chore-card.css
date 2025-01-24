@@ -9,8 +9,12 @@ body {
   min-height: 100vh;  
 }
 
+ha-card {
+  width: 100%;
+}
+
 .card-wrapper {
-  width: 95%;
+  width: 100%;
   max-width: 1200px;
   margin: 20px auto;
   padding: 10px;
@@ -46,7 +50,7 @@ h1 {
   display: grid;
   grid-template-columns: 1fr repeat(7, 1fr); /* Empty column + days */
   gap: 5px;
-  width: 100%;
+  width: 95%;
   box-sizing: border-box;
 }
 
