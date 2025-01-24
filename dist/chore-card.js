@@ -324,11 +324,15 @@ export class ChoreCard extends HTMLElement {
 
     let optionsChanged = false;
 
+    console.log('Saved state before update:', savedState);
+
     // Ensure savedState is initialized and has a valid structure
     if (!savedState || typeof savedState !== 'object') {
       savedState = {}; // Initialize it as an empty object
     }
 
+    console.log('Saved state after update:', savedState);
+    
     stateOptions.forEach(({ yamlKey, stateKey }) => {
         let yamlValue = yamlData[yamlKey];
         let savedValue = savedState[stateKey];
