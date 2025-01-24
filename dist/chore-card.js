@@ -262,12 +262,15 @@ export class ChoreCard extends HTMLElement {
 
         console.log('State to be saved:', state);
 
+        // Check if a friendly_name exists, fallback to title from YAML
+        const friendlyName = this.config.friendly_name || this.config.title || 'Chore Card';
+
         // Construct the payload for the POST request
         const payload = {
           state: 'active', // Use a valid string to represent the sensor's state
           attributes: {
               ...state, // Include the state data in the attributes field
-              friendly_name: 'Chore Card', // Optional: add a human-readable name
+              friendly_name: friendlyName, // Optional: add a human-readable name
           },
         };
 
@@ -290,7 +293,10 @@ export class ChoreCard extends HTMLElement {
             console.error('Error details:', errorDetails);
             throw new Error(`Failed to save state: ${response.statusText}`);
         }
-
+        
+        const staterep = await response.json();
+        const savedState = JSON.parse(staterep.state);
+        console.log('State Save response from Home Assistant:', savedState);
         console.log(`State saved successfully for card: ${this.cardId}`);
         this.lastSavedState = state; // Update the in-memory saved state
     } catch (error) {
