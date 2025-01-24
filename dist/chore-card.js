@@ -294,8 +294,7 @@ export class ChoreCard extends HTMLElement {
             throw new Error(`Failed to save state: ${response.statusText}`);
         }
         
-        const staterep = await response.json();
-        const savedState = JSON.parse(staterep.state);
+        const savedState = JSON.parse(response.json());
         console.log('State Save response from Home Assistant:', savedState);
         console.log(`State saved successfully for card: ${this.cardId}`);
         this.lastSavedState = state; // Update the in-memory saved state
