@@ -413,18 +413,15 @@ export class ChoreCard extends HTMLElement {
     const choreSections = ['daily', 'weekly', 'monthly'];
     let choresChanged = false;
 
-    // Clone `data` to ensure we can safely modify it
-    savedState.data = savedState.data ? { ...savedState.data } : {};
+    // Ensure the `data` object exists and clone it to avoid direct mutation
+    savedState.data = savedState.data ? JSON.parse(JSON.stringify(savedState.data)) : {};
 
     choreSections.forEach((section) => {
         const yamlChores = yamlData.chores?.[section] || [];
-        console.log('savedState.data:', savedState.data);
-        console.log('Is savedState.data frozen:', Object.isFrozen(savedState.data));
         savedState.data[section] = savedState.data[section] || []; // Ensure section exists
-        let savedChores = savedState.data[section];
 
-        // Clone `savedChores` to avoid immutability issues
-        savedChores = savedChores.map((chore) => ({ ...chore }));
+        // Clone the array to prevent modifying the original reference
+        let savedChores = [...savedState.data[section]];
 
         const yamlChoreMap = new Map(yamlChores.map((chore) => [chore.name, chore]));
         const savedChoreMap = new Map(savedChores.map((chore) => [chore.name, chore]));
