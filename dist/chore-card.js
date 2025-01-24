@@ -28,7 +28,7 @@ export class ChoreCard extends HTMLElement {
     this.apiBaseUrl = this.getAttribute('api-base-url') || ''; // Default: Home Assistant API
     const rawCardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
     this.cardId = rawCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_'); // Sanitize cardId
-    console.log(`Sanitized cardId: ${this.cardId}`);
+    console.log(`Sanitized cardId: ${this.getAttribute('card-id')}`);
 
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set    
