@@ -264,8 +264,11 @@ export class ChoreCard extends HTMLElement {
 
         // Construct the payload for the POST request
         const payload = {
-            state: 'active', // Use a valid string to represent the card's state
-            attributes: state, // Include the actual state as attributes
+          state: 'active', // Use a valid string to represent the sensor's state
+          attributes: {
+              ...state, // Include the state data in the attributes field
+              friendly_name: 'Chore Card', // Optional: add a human-readable name
+          },
         };
 
         console.log('Payload to be sent:', payload);
