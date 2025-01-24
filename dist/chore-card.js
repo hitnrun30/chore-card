@@ -413,15 +413,17 @@ export class ChoreCard extends HTMLElement {
     const choreSections = ['daily', 'weekly', 'monthly'];
     let choresChanged = false;
 
-    // Ensure the `data` object exists in the saved state
-    savedState.data = savedState.data || {};
+    // Clone `data` to ensure we can safely modify it
+    savedState.data = savedState.data ? { ...savedState.data } : {};
 
     choreSections.forEach((section) => {
         const yamlChores = yamlData.chores?.[section] || [];
+        console.log('savedState.data:', savedState.data);
+        console.log('Is savedState.data frozen:', Object.isFrozen(savedState.data));
         savedState.data[section] = savedState.data[section] || []; // Ensure section exists
-        let savedChores = savedState.data[section]; // Immutable check: Clone if necessary
+        let savedChores = savedState.data[section];
 
-        // Clone `savedChores` to ensure we don't modify the original array
+        // Clone `savedChores` to avoid immutability issues
         savedChores = savedChores.map((chore) => ({ ...chore }));
 
         const yamlChoreMap = new Map(yamlChores.map((chore) => [chore.name, chore]));
@@ -510,7 +512,6 @@ export class ChoreCard extends HTMLElement {
     console.log('Chores updated:', this.data);
     return choresChanged;
   }
-
 
   normalizeDayName(dayName) {
     if (!dayName || typeof dayName !== 'string') {
