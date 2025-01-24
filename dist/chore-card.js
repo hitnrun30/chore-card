@@ -194,10 +194,18 @@ export class ChoreCard extends HTMLElement {
         console.log('Set response: ', response.status);
 
         if (response.ok) {
-            console.log('response is: ', response.ok);
-            const state = await response.json();
-            savedState = JSON.parse(state.state);
-            console.log('State loaded from Home Assistant:', savedState);
+          const text = await response.text(); // Get the raw text response
+          console.log('Raw response:', text);
+      
+          try {
+              const state = JSON.parse(text); // Parse manually
+              console.log('Parsed state:', state);
+              savedState = JSON.parse(state.state);
+              console.log('State loaded from Home Assistant:', savedState);
+          } catch (error) {
+              console.error('Error parsing response as JSON:', error);
+              throw error; // Re-throw the error for debugging
+          }            
         } else if (response.status === 404) {
             console.warn(`No saved state found for card: ${this.cardId}`);
             throw new Error('State not found (404).'); // Trigger catch block for consistency
@@ -270,7 +278,7 @@ export class ChoreCard extends HTMLElement {
 
         // Construct the payload for the POST request
         const payload = {
-          state: 'active', // Use a valid string to represent the sensor's state
+          state: "active", // Use a valid string to represent the sensor's state
           attributes: {
               ...state, // Include the state data in the attributes field
               friendly_name: friendlyName, // Optional: add a human-readable name
