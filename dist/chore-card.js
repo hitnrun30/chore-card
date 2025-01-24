@@ -413,17 +413,13 @@ export class ChoreCard extends HTMLElement {
     const choreSections = ['daily', 'weekly', 'monthly'];
     let choresChanged = false;
 
-    // Ensure `savedState.data` is mutable
-    savedState.data = savedState.data || {};
-
-    // Clone `this.data` to avoid direct modification
-    const updatedData = { ...this.data };
+    // Deep clone `savedState.data` to make it mutable
+    savedState.data = savedState.data ? JSON.parse(JSON.stringify(savedState.data)) : {};
 
     choreSections.forEach((section) => {
         const yamlChores = yamlData.chores?.[section] || [];
-        
-        console.log('Before update, this.data:', JSON.stringify(this.data));
-        console.log('Is this.data frozen:', Object.isFrozen(this.data));
+        console.log('Before update, savedState.data:', JSON.stringify(savedState.data));
+        console.log('Is savedState.data frozen:', Object.isFrozen(savedState.data));
     
         savedState.data[section] = savedState.data[section] || []; // Ensure section exists
         const savedChores = [...savedState.data[section]];
@@ -507,13 +503,8 @@ export class ChoreCard extends HTMLElement {
         savedState.data[section] = updatedChores;
 
         // Update the cloned data object
-        updatedData[section] = updatedChores;
+        this.data[section] = updatedChores;
     });
-
-    // Assign the cloned data object back to `this.data`
-    console.log('Before update, this.data:', JSON.stringify(this.data));
-    console.log('Is this.data frozen:', Object.isFrozen(this.data));
-    this.data = updatedData;
 
     console.log('Chores updated:', this.data);
     return choresChanged;
