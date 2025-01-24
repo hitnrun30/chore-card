@@ -396,7 +396,7 @@ export class ChoreCard extends HTMLElement {
     });
 
     // Sort users alphabetically by name
-    console.log(`Sorting users: ${this.users.length}`);
+    console.log(`Sorting users: ${savedUsers.length}`);
     savedUsers.sort((a, b) => a.name.localeCompare(b.name));
 
     // Ensure the saved state and constructor values are synchronized
