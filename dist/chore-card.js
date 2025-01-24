@@ -194,6 +194,9 @@ export class ChoreCard extends HTMLElement {
         console.log('Response to parse:', response);
 
         if (response.ok) {
+          const sensorState = await response.json();
+          console.log('Raw state response:', sensorState);
+
           savedState = sensorState.attributes; // Only parse attributes
           console.log('Parsed saved state:', savedState);
 
