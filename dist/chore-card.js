@@ -408,104 +408,109 @@ export class ChoreCard extends HTMLElement {
   }
 
   checkAndUpdateChores(yamlData, savedState) {
-    console.log('Checking and updating chores...');
+    try
+    {
+      console.log('Checking and updating chores...');
 
-    const choreSections = ['daily', 'weekly', 'monthly'];
-    let choresChanged = false;
+      const choreSections = ['daily', 'weekly', 'monthly'];
+      let choresChanged = false;
 
-    // Deep clone `savedState.data` to make it mutable
-    savedState.data = savedState.data ? JSON.parse(JSON.stringify(savedState.data)) : {};
+      // Deep clone `savedState.data` to make it mutable
+      savedState.data = savedState.data ? JSON.parse(JSON.stringify(savedState.data)) : {};
 
-    choreSections.forEach((section) => {
-        const yamlChores = yamlData.chores?.[section] || [];
-        console.log('Before update, savedState.data:', JSON.stringify(savedState.data));
-        console.log('Is savedState.data frozen:', Object.isFrozen(savedState.data));
-    
-        savedState.data[section] = savedState.data[section] || []; // Ensure section exists
-        const savedChores = [...savedState.data[section]];
+      choreSections.forEach((section) => {
+          const yamlChores = yamlData.chores?.[section] || [];
+          console.log('Before update, savedState.data:', JSON.stringify(savedState.data));
+          console.log('Is savedState.data frozen:', Object.isFrozen(savedState.data));
+      
+          savedState.data[section] = savedState.data[section] || []; // Ensure section exists
+          const savedChores = [...savedState.data[section]];
 
-        const yamlChoreMap = new Map(yamlChores.map((chore) => [chore.name, chore]));
-        const savedChoreMap = new Map(savedChores.map((chore) => [chore.name, chore]));
+          const yamlChoreMap = new Map(yamlChores.map((chore) => [chore.name, chore]));
+          const savedChoreMap = new Map(savedChores.map((chore) => [chore.name, chore]));
 
-        const updatedChores = [];
+          const updatedChores = [];
 
-        // Handle added or updated chores
-        yamlChores.forEach((yamlChore) => {
-            const savedChore = savedChoreMap.get(yamlChore.name);
+          // Handle added or updated chores
+          yamlChores.forEach((yamlChore) => {
+              const savedChore = savedChoreMap.get(yamlChore.name);
 
-            if (!savedChore) {
-                console.log(`Adding new chore: ${yamlChore.name}`);
-                updatedChores.push({ ...yamlChore, selections: Array(7).fill(null) }); // Initialize selections
-                choresChanged = true;
-            } else {
-                // Handle updates to existing chores
-                let choreUpdated = false;
+              if (!savedChore) {
+                  console.log(`Adding new chore: ${yamlChore.name}`);
+                  updatedChores.push({ ...yamlChore, selections: Array(7).fill(null) }); // Initialize selections
+                  choresChanged = true;
+              } else {
+                  // Handle updates to existing chores
+                  let choreUpdated = false;
 
-                // Check points change
-                if (yamlChore.points !== savedChore.points) {
-                    console.log(`Updating points for chore: ${yamlChore.name}`);
-                    savedChore.selections?.forEach((user) => {
-                        if (user) {
-                            savedState.userPoints[user] += (yamlChore.points || 0) - (savedChore.points || 0);
-                        }
-                    });
-                    savedChore.points = yamlChore.points;
-                    choreUpdated = true;
-                }
+                  // Check points change
+                  if (yamlChore.points !== savedChore.points) {
+                      console.log(`Updating points for chore: ${yamlChore.name}`);
+                      savedChore.selections?.forEach((user) => {
+                          if (user) {
+                              savedState.userPoints[user] += (yamlChore.points || 0) - (savedChore.points || 0);
+                          }
+                      });
+                      savedChore.points = yamlChore.points;
+                      choreUpdated = true;
+                  }
 
-                // Weekly task: Check day change
-                if (section === 'weekly') {
-                    const normalizedDay = this.normalizeDayName(yamlChore.day);
+                  // Weekly task: Check day change
+                  if (section === 'weekly') {
+                      const normalizedDay = this.normalizeDayName(yamlChore.day);
 
-                    if (normalizedDay !== savedChore.day) {
-                        console.log(`Day changed for weekly chore: ${yamlChore.name}`);
-                        savedChore.selections = Array(7).fill(null); // Clear all user selections
-                        savedChore.day = normalizedDay;
-                        choreUpdated = true;
-                    }
-                }
+                      if (normalizedDay !== savedChore.day) {
+                          console.log(`Day changed for weekly chore: ${yamlChore.name}`);
+                          savedChore.selections = Array(7).fill(null); // Clear all user selections
+                          savedChore.day = normalizedDay;
+                          choreUpdated = true;
+                      }
+                  }
 
-                // Monthly task: Check week_of_month changes
-                if (section === 'monthly') {
-                    if (yamlChore.week_of_month?.week !== savedChore.week_of_month?.week) {
-                        console.log(`Week of month changed for monthly chore: ${yamlChore.name}`);
-                        savedChore.selections = Array(7).fill(null); // Clear all user selections
-                        savedChore.week_of_month = { ...yamlChore.week_of_month };
-                        choreUpdated = true;
-                    }
-                    if (yamlChore.max_days !== savedChore.max_days) {
-                        console.log(`Max days changed for monthly chore: ${yamlChore.name}`);
-                        if ((yamlChore.max_days || 0) < (savedChore.max_days || 0)) {
-                            savedChore.selections = Array(7).fill(null); // Clear all user selections
-                        }
-                        savedChore.max_days = yamlChore.max_days;
-                        choreUpdated = true;
-                    }
-                    if (yamlChore.week_of_month?.highlight_color !== savedChore.week_of_month?.highlight_color) {
-                        const validatedHighlightColor = this.isValidCssColor(yamlChore.week_of_month.highlight_color)
-                            ? yamlChore.week_of_month.highlight_color
-                            : 'transparent'; // Default to 'transparent' if invalid
+                  // Monthly task: Check week_of_month changes
+                  if (section === 'monthly') {
+                      if (yamlChore.week_of_month?.week !== savedChore.week_of_month?.week) {
+                          console.log(`Week of month changed for monthly chore: ${yamlChore.name}`);
+                          savedChore.selections = Array(7).fill(null); // Clear all user selections
+                          savedChore.week_of_month = { ...yamlChore.week_of_month };
+                          choreUpdated = true;
+                      }
+                      if (yamlChore.max_days !== savedChore.max_days) {
+                          console.log(`Max days changed for monthly chore: ${yamlChore.name}`);
+                          if ((yamlChore.max_days || 0) < (savedChore.max_days || 0)) {
+                              savedChore.selections = Array(7).fill(null); // Clear all user selections
+                          }
+                          savedChore.max_days = yamlChore.max_days;
+                          choreUpdated = true;
+                      }
+                      if (yamlChore.week_of_month?.highlight_color !== savedChore.week_of_month?.highlight_color) {
+                          const validatedHighlightColor = this.isValidCssColor(yamlChore.week_of_month.highlight_color)
+                              ? yamlChore.week_of_month.highlight_color
+                              : 'transparent'; // Default to 'transparent' if invalid
 
-                        console.log(`Highlight color changed for monthly chore: ${yamlChore.name} to ${validatedHighlightColor}`);
-                        savedChore.week_of_month.highlight_color = validatedHighlightColor;
-                        choreUpdated = true;
-                    }
-                }
+                          console.log(`Highlight color changed for monthly chore: ${yamlChore.name} to ${validatedHighlightColor}`);
+                          savedChore.week_of_month.highlight_color = validatedHighlightColor;
+                          choreUpdated = true;
+                      }
+                  }
 
-                if (choreUpdated) {
-                    choresChanged = true;
-                }
-                updatedChores.push(savedChore);
-            }
-        });
+                  if (choreUpdated) {
+                      choresChanged = true;
+                  }
+                  updatedChores.push(savedChore);
+              }
+          });
 
-        // Update the saved state with the filtered and updated chores
-        savedState.data[section] = updatedChores;
+          // Update the saved state with the filtered and updated chores
+          savedState.data[section] = updatedChores;
 
-        // Update the cloned data object
-        this.data[section] = updatedChores;
-    });
-
+          // Update the cloned data object
+          this.data[section] = updatedChores;
+      });
+    }
+    catch (error) {
+      console.error(`Checking and updating chores`, error);
+    }
     console.log('Chores updated:', this.data);
     return choresChanged;
   }
