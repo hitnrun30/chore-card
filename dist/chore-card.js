@@ -194,10 +194,7 @@ export class ChoreCard extends HTMLElement {
         console.log('Response to parse:', response);
 
         if (response.ok) {
-          const sensorState = await response.json();
-          console.log('Raw state response:', sensorState);
-
-          const savedState = sensorState.attributes; // Only parse attributes
+          savedState = sensorState.attributes; // Only parse attributes
           console.log('Parsed saved state:', savedState);
 
           // Ensure savedState is valid before proceeding
@@ -332,7 +329,7 @@ export class ChoreCard extends HTMLElement {
     }
 
     console.log('Saved state after update:', savedState);
-    
+
     stateOptions.forEach(({ yamlKey, stateKey }) => {
         let yamlValue = yamlData[yamlKey];
         let savedValue = savedState[stateKey];
