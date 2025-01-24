@@ -413,15 +413,16 @@ export class ChoreCard extends HTMLElement {
     const choreSections = ['daily', 'weekly', 'monthly'];
     let choresChanged = false;
 
-    // Ensure the `data` object exists and clone it to avoid direct mutation
-    savedState.data = savedState.data ? JSON.parse(JSON.stringify(savedState.data)) : {};
+    // Ensure `savedState.data` is mutable
+    savedState.data = savedState.data || {};
+
+    // Clone `this.data` to avoid direct modification
+    const updatedData = { ...this.data };
 
     choreSections.forEach((section) => {
         const yamlChores = yamlData.chores?.[section] || [];
         savedState.data[section] = savedState.data[section] || []; // Ensure section exists
-
-        // Clone the array to prevent modifying the original reference
-        let savedChores = [...savedState.data[section]];
+        const savedChores = [...savedState.data[section]];
 
         const yamlChoreMap = new Map(yamlChores.map((chore) => [chore.name, chore]));
         const savedChoreMap = new Map(savedChores.map((chore) => [chore.name, chore]));
@@ -454,13 +455,12 @@ export class ChoreCard extends HTMLElement {
 
                 // Weekly task: Check day change
                 if (section === 'weekly') {
-                    console.log(`Day value for weekly chore: ${yamlChore.day}`);
                     const normalizedDay = this.normalizeDayName(yamlChore.day);
 
                     if (normalizedDay !== savedChore.day) {
                         console.log(`Day changed for weekly chore: ${yamlChore.name}`);
                         savedChore.selections = Array(7).fill(null); // Clear all user selections
-                        savedChore.day = normalizedDay; // Update the day
+                        savedChore.day = normalizedDay;
                         choreUpdated = true;
                     }
                 }
@@ -502,9 +502,14 @@ export class ChoreCard extends HTMLElement {
         // Update the saved state with the filtered and updated chores
         savedState.data[section] = updatedChores;
 
-        // Update constructor values for rendering
-        this.data[section] = updatedChores;
+        // Update the cloned data object
+        updatedData[section] = updatedChores;
     });
+
+    // Assign the cloned data object back to `this.data`
+    console.log('Before update, this.data:', JSON.stringify(this.data));
+    console.log('Is this.data frozen:', Object.isFrozen(this.data));
+    this.data = updatedData;
 
     console.log('Chores updated:', this.data);
     return choresChanged;
