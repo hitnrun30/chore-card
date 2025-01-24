@@ -26,9 +26,16 @@ export class ChoreCard extends HTMLElement {
 
     // Dynamically determine base URL and card ID
     this.apiBaseUrl = this.getAttribute('api-base-url') || ''; // Default: Home Assistant API
-    const rawCardId = this.getAttribute('card-id') || `chore-card-${Date.now()}`;
-    this.cardId = rawCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_'); // Sanitize cardId
-    console.log(`Sanitized cardId: ${this.getAttribute('card-id')}`);
+    let storedCardId = localStorage.getItem('chore-card-id');
+    if (storedCardId) {
+      this.cardId = storedCardId;
+    } else {
+      // Generate and save a new ID if not present
+      storedCardId = `chore-card-${Date.now()}`;
+      this.cardId = storedCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      localStorage.setItem('chore-card-id', this.cardId);
+    }
+    console.log(`Sanitized cardId: ${this.cardId}`);
 
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set    
