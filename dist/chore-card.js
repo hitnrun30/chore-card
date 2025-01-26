@@ -26,14 +26,14 @@ export class ChoreCard extends HTMLElement {
 
     // Dynamically determine base URL and card ID
     this.apiBaseUrl = this.getAttribute('api-base-url') || ''; // Default: Home Assistant API
-    let storedCardId = localStorage.getItem('chore-card-id');
+    let storedCardId = localStorage.getItem(`chore-card-id-${this.cardId}`);
     if (storedCardId) {
       this.cardId = storedCardId;
     } else {
       // Generate and save a new ID if not present
       storedCardId = `chore-card-${Date.now()}`;
       this.cardId = storedCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-      localStorage.setItem('chore-card-id', this.cardId);
+      localStorage.setItem(`chore-card-id-${this.cardId}`, this.cardId);
     }
     console.log(`Sanitized cardId: ${this.cardId}`);
 
@@ -143,6 +143,45 @@ export class ChoreCard extends HTMLElement {
     return this._hass;
   }
   
+  disconnectedCallback() {
+    console.log(`Card disconnected. Checking if card is being deleted for cardId: ${this.cardId}`);
+
+    // Delay to confirm if the card is actually being deleted
+    setTimeout(() => {
+        if (!document.body.contains(this)) {
+            console.log(`Card deletion confirmed for cardId: ${this.cardId}`);
+
+            // Remove the card ID from localStorage
+            localStorage.removeItem(`chore-card-id-${this.cardId}`);
+
+            // API call to delete the sensor entity
+            const deleteUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this.haToken}`,
+                },
+            })
+            .then((response) => {
+                if (response.ok) {
+                    console.log(`Sensor entity sensor.${this.cardId} deleted successfully.`);
+                } else {
+                    console.error(`Failed to delete sensor entity sensor.${this.cardId}: ${response.statusText}`);
+                }
+            })
+            .catch((error) => {
+                console.error(`Error deleting sensor entity sensor.${this.cardId}:`, error);
+            });
+        } else {
+            console.log(`Card disconnection was temporary for cardId: ${this.cardId}`);
+        }
+    }, 100); // Delay for 100ms to allow DOM updates
+
+    // Call parent disconnectedCallback if needed
+    super.disconnectedCallback && super.disconnectedCallback();
+  }
+
   createDefaultState(yamlData) {
     console.log('Creating default state...');
     
@@ -415,15 +454,20 @@ export class ChoreCard extends HTMLElement {
       const validatedColor = this.isValidCssColor(yamlUser.background_color)
           ? yamlUser.background_color
           : 'transparent';
+
+      const validatedFont = this.isValidCssColor(yamlUser.font_color)
+      ? yamlUser.font_color
+      : 'white';
   
       if (!savedUser) {
           console.log(`Adding new user: ${yamlUser.name}`);
-          savedUsers.push({ name: yamlUser.name, background_color: validatedColor });
+          savedUsers.push({ name: yamlUser.name, background_color: validatedColor, font_color: validatedFont});
           savedState.userPoints[yamlUser.name] = 0; // Initialize points for new user
           usersChanged = true;
-      } else if (savedUser.background_color !== validatedColor) {
+      } else if (savedUser.background_color !== validatedColor || savedUser.font_color != validatedFont) {
           console.log(`Updating color for user: ${yamlUser.name}`);
           savedUser.background_color = validatedColor; // Update the color
+          savedUser.font_color = validatedFont
           usersChanged = true;
       }
     });
@@ -488,15 +532,16 @@ export class ChoreCard extends HTMLElement {
                 }
 
                 if (section === 'weekly') {
-                    const normalizedDay = this.normalizeDayName(yamlChore.day);
-                    if (normalizedDay !== savedChore.day) {
-                        console.log(`Day changed for weekly chore: ${yamlChore.name}`);
-                        savedChore.selections = Array(7).fill(null);
-                        savedChore.day = normalizedDay;
-                        choreUpdated = true;
-                    }
+                  const normalizedDays = this.normalizeDays(yamlChore.days); // Handle multiple days
+              
+                  if (JSON.stringify(normalizedDays) !== JSON.stringify(savedChore.days)) {
+                      console.log(`Days changed for weekly chore: ${yamlChore.name}`);
+                      savedChore.selections = Array(7).fill(null); // Clear all user selections
+                      savedChore.days = normalizedDays; // Update to the new days
+                      choreUpdated = true;
+                  }
                 }
-
+              
                 if (section === 'monthly') {
                     if (yamlChore.week_of_month?.week !== savedChore.week_of_month?.week) {
                         console.log(`Week of month changed for monthly chore: ${yamlChore.name}`);
@@ -558,6 +603,12 @@ export class ChoreCard extends HTMLElement {
     // Return undefined for invalid days
     console.warn(`Invalid day name: ${dayName}`);
     return undefined;
+  }
+
+  normalizeDays(days) {
+    if (!days) return [];
+    // Split on commas and normalize each day
+    return days.split(',').map(day => this.normalizeDayName(day)).filter(Boolean);
   }
 
   isValidCssColor(color) {
@@ -797,11 +848,13 @@ export class ChoreCard extends HTMLElement {
 
     html += chores
         .map((chore, rowIndex) => {
-            const specificDayIndex =
-                chore.day ? this.getDayIndex(chore.day) : null;
+            const specificDayIndexes = 
+                chore.day ? 
+                chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1) : 
+                null;
 
-            if (specificDayIndex === -1 && chore.day) {
-                console.error(`Invalid day value for chore: ${chore.name}, Day: ${chore.day}`);
+            if (chore.day && specificDayIndexes.length === 0) {
+                console.error(`Invalid day value(s) for chore: ${chore.name}, Days: ${chore.day}`);
             }
 
             return this.renderChoreRow(
@@ -810,12 +863,12 @@ export class ChoreCard extends HTMLElement {
                 'weekly',
                 orderedIndexes,
                 (dayIndex, hasValue) => {
-                    // Disable all days except the specific one if day is set
-                    if (specificDayIndex !== null) {
-                        return dayIndex !== specificDayIndex && !hasValue;
+                    // Disable all days except the specific ones if days are set
+                    if (specificDayIndexes !== null) {
+                        return !specificDayIndexes.includes(dayIndex) && !hasValue;
                     }
 
-                    // If no specific day, disable the row if a selection exists
+                    // If no specific days, disable the row if a selection exists
                     const isRowDisabled =
                         chore.selections && chore.selections.some((sel) => sel);
 
@@ -955,9 +1008,10 @@ export class ChoreCard extends HTMLElement {
 
             // Fallback for missing background color
             const backgroundColor = user.background_color || 'transparent';
+            const fontColor = user.font_color || 'white';
 
             return `
-                <div class="user-score" style="background-color: ${backgroundColor};">
+                <div class="user-score" style="background-color: ${backgroundColor}; color: ${fontColor};">
                     <strong>${user.name}: ${points}</strong>
                 </div>`;
         })

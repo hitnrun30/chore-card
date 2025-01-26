@@ -40,48 +40,46 @@ Add the following configuration to your Lovelace dashboard YAML file or via the 
 ```yaml
 title: Home Dashboard
 views:
-  - title: Chore Tracker
-    path: chore-tracker
+  - title: Chore Card
+    path: chorecard
     badges: []
     cards:
       - type: custom:chore-card
-        card-id: chore-card-12345
         title: Chore Tracker
-        config:
-          first_day_of_week: Monday
-          show_long_day_names: true
-          points_position: top
-          day_header_background_color: lightblue
-          day_header_font_color: black
-          users:
-            - name: Alice
-              background_color: lightpink
-            - name: Bob
-              background_color: lightgreen
-          chores:
-            daily:
-              - name: Wash Dishes
-                points: 5
-              - name: Sweep Floor
-                points: 3
-            weekly:
-              - name: Mop Floors
-                points: 10
-                day: Monday
-              - name: Vacuum
-                points: 8
-            monthly:
-              - name: Clean Windows
-                points: 15
-                week_of_month:
-                  week: 1
-                  highlight_color: green
-              - name: Organize Garage
-                points: 20
-                week_of_month:
-                  week: 3
-                  highlight_color: orange
-                max_days: 2
+        first_day_of_week: Monday
+        show_long_day_names: true
+        points_position: top
+        day_header_background_color: lightblue
+        day_header_font_color: black
+        users:
+          - name: Alice
+            background_color: lightpink
+          - name: Bob
+            background_color: lightgreen
+        chores:
+          daily:
+            - name: Wash Dishes
+              points: 5
+            - name: Sweep Floor
+              points: 3
+          weekly:
+            - name: Mop Floors
+              points: 10
+              day: Monday
+            - name: Vacuum
+              points: 8
+          monthly:
+            - name: Clean Windows
+              points: 15
+              week_of_month:
+                week: 1
+                highlight_color: green
+            - name: Organize Garage
+              points: 20
+              week_of_month:
+                week: 3
+                highlight_color: orange
+              max_days: 2
 ```
 
 ---
