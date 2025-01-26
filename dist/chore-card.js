@@ -143,6 +143,7 @@ export class ChoreCard extends HTMLElement {
     return this._hass;
   }
   
+  /*
   disconnectedCallback() {
     console.log(`Card disconnected. Checking if card is being deleted for cardId: ${this.cardId}`);
 
@@ -181,7 +182,7 @@ export class ChoreCard extends HTMLElement {
     // Call parent disconnectedCallback if needed
     super.disconnectedCallback && super.disconnectedCallback();
   }
-
+  */
   createDefaultState(yamlData) {
     console.log('Creating default state...');
     
