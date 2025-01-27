@@ -1092,42 +1092,46 @@ export class ChoreCard extends HTMLElement {
 
   renderChoreRow(chore, rowIndex, section, orderedIndexes, isDisabledCallback) {
     return `
-        <div class="chore-row">
-            <div class="chore-name">${chore.name}</div>
-            ${orderedIndexes
-              .map((dayIndex) => {
-                const hasValue =
-                  chore.selections &&
-                  chore.selections[dayIndex] &&
-                  chore.selections[dayIndex] !== "";
-                const isDisabled = isDisabledCallback(dayIndex, hasValue);
+                <div class="chore-name" style="background-color: ${
+                  chore.highlightColor || "transparent"
+                };">${chore.name}</div>
+                ${orderedIndexes
+                  .map((dayIndex) => {
+                    const hasValue =
+                      chore.selections &&
+                      chore.selections[dayIndex] &&
+                      chore.selections[dayIndex] !== "";
+                    const isDisabled = isDisabledCallback(dayIndex, hasValue);
 
-                return `
-                    <div class="grid-cell">
-                        <select class="user-dropdown" 
-                                data-section="${section}" 
-                                data-row="${rowIndex}" 
-                                data-day="${dayIndex}" 
-                                ${isDisabled ? "disabled" : ""}
-                                onchange="this.getRootNode().host.handleDropdownChange(event)">
-                            <option value="">--</option>
-                            ${this.users
-                              .map(
-                                (user) =>
-                                  `<option value="${user.name}" ${
-                                    hasValue &&
-                                    chore.selections[dayIndex] === user.name
-                                      ? "selected"
-                                      : ""
-                                  }>${user.name}</option>`).join("")}
-                        </select>
-                    </div>
-                `;
-              }).join("")}
-        </div>
-    `;
+                    return `
+                            <div class="grid-cell">
+                                <select class="user-dropdown" 
+                                        data-section="${section}" 
+                                        data-row="${rowIndex}" 
+                                        data-day="${dayIndex}" 
+                                        ${isDisabled ? "disabled" : ""}
+                                        onchange="this.getRootNode().host.handleDropdownChange(event)">
+                                    <option value="">--</option>
+                                    ${this.users
+                                      .map(
+                                        (user) =>
+                                          `<option value="${user.name}" ${
+                                            hasValue &&
+                                            chore.selections[dayIndex] ===
+                                              user.name
+                                              ? "selected"
+                                              : ""
+                                          }>${user.name}</option>`,
+                                      )
+                                      .join("")}
+                                </select>
+                            </div>
+                        `;
+                  })
+                  .join("")}
+            `;
   }
-
+  
   getCurrentWeekOfMonth() {
     const now = new Date();
     const firstDayOfWeek = this.firstDayOfWeek || "Monday"; // Default to Monday if not set
