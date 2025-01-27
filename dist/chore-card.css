@@ -68,10 +68,14 @@ h1 {
   border: none; /* Optional: Remove border for cleaner design */
 }
 
-
 .section-header {
   grid-column: span 8;
   font-weight: bold;
+  margin: 10px 0;
+}
+
+.chore-row {
+  grid-column: span 8;
   margin: 10px 0;
 }
 

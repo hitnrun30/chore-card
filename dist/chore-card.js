@@ -1092,6 +1092,7 @@ export class ChoreCard extends HTMLElement {
 
   renderChoreRow(chore, rowIndex, section, orderedIndexes, isDisabledCallback) {
     return `
+                <div class="chore-row">
                 <div class="chore-name" style="background-color: ${
                   chore.highlightColor || "transparent"
                 };">${chore.name}</div>
@@ -1129,6 +1130,7 @@ export class ChoreCard extends HTMLElement {
                         `;
                   })
                   .join("")}
+                </div>
             `;
   }
 
