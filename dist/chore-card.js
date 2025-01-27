@@ -119,7 +119,6 @@ export class ChoreCard extends HTMLElement {
         if (this.haToken) {
           console.log(
             "Successfully retrieved Home Assistant token:",
-            this.haToken,
           );
         } else {
           console.warn("Home Assistant token is not available.");
@@ -256,11 +255,8 @@ export class ChoreCard extends HTMLElement {
 
       if (response.ok) {
         const sensorState = await response.json();
-        console.log("Raw state response:", sensorState);
-
         savedState = sensorState.attributes; // Only parse attributes
-        console.log("Parsed saved state:", savedState);
-
+        
         // Ensure savedState is valid before proceeding
         if (!savedState || typeof savedState !== "object") {
           throw new Error("Invalid saved state format.");
@@ -544,9 +540,7 @@ export class ChoreCard extends HTMLElement {
 
   checkAndUpdateChores(yamlData, savedState) {
     console.log("Checking and updating chores...");
-    console.log("Before update, this.data:", this.data);
-    console.log("Is this.data frozen:", Object.isFrozen(this.data));
-
+    
     // If this.data is frozen, create a mutable copy
     if (Object.isFrozen(this.data)) {
         this.data = JSON.parse(JSON.stringify(this.data));
@@ -577,7 +571,6 @@ export class ChoreCard extends HTMLElement {
             const savedChore = savedChoreMap.get(yamlChore.name);
 
             if (!savedChore) {
-                console.log(`Adding new chore: ${yamlChore.name}`);
                 updatedChores.push({ ...yamlChore, selections: Array(7).fill(null) });
                 choresChanged = true;
             } else {
@@ -949,23 +942,19 @@ export class ChoreCard extends HTMLElement {
       console.warn("Ordered indexes not found.");
       return "";
     }
-
-    console.log("Ordered day indexes:", orderedIndexes);
-
+    
     let html = `<div class="section-header">${header}</div>`;
 
     html += chores
       .map((chore, rowIndex) => {
-        console.log(`Processing chore: ${chore.name}`);
-        console.log("Chore data:", chore);
+        console.log(`Processing chore: ${chore.name}`);        
 
         // Use `days` instead of `day`
         const specificDayIndexes =
           Array.isArray(chore.days) && chore.days.length > 0
             ? chore.days
                 .map((day) => {
-                  const dayIndex = this.getDayIndex(day.trim());
-                  console.log(`Mapped day "${day}" to index:`, dayIndex);
+                  const dayIndex = this.getDayIndex(day.trim());                  
                   return dayIndex;
                 })
                 .filter((index) => index !== -1) // Only valid indexes
@@ -984,21 +973,11 @@ export class ChoreCard extends HTMLElement {
           rowIndex,
           "weekly",
           orderedIndexes,
-          (dayIndex, hasValue) => {
-            console.log(
-              `Checking if dayIndex ${dayIndex} is enabled for chore "${chore.name}"`,
-            );
-            console.log("Has value:", hasValue);
-
+          (dayIndex, hasValue) => {    
             // Disable all days except the specific ones if days are set
             if (specificDayIndexes !== null) {
               const isEnabled =
-                specificDayIndexes.includes(dayIndex) || hasValue;
-              console.log(
-                `DayIndex ${dayIndex} ${
-                  isEnabled ? "enabled" : "disabled"
-                } for chore "${chore.name}"`,
-              );
+                specificDayIndexes.includes(dayIndex) || hasValue;              
               return !isEnabled;
             }
 
@@ -1016,9 +995,7 @@ export class ChoreCard extends HTMLElement {
         );
       })
       .join("");
-
-    console.log("Generated HTML:", html);
-
+    
     return html;
   }
 

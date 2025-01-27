@@ -54,6 +54,7 @@ views:
         users:
           - name: Alice
             background_color: lightpink
+            font_color: black
           - name: Bob
             background_color: lightgreen
         chores:
@@ -65,9 +66,12 @@ views:
           weekly:
             - name: Mop Floors
               points: 10
-              day: Monday
+              days: Monday
             - name: Vacuum
               points: 8
+            - name: Take out garbage
+              points: 1
+              days: Mon, Thu
           monthly:
             - name: Clean Windows
               points: 15
