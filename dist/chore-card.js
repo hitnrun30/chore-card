@@ -1090,45 +1090,45 @@ export class ChoreCard extends HTMLElement {
     return html;
   }
 
-  renderChoreRow(chore, rowIndex, section, orderedIndexes, isDayDisabled) {
+  renderChoreRow(chore, rowIndex, section, orderedIndexes, isDisabledCallback) {
     return `
-      <div class="chore-row" style="border: 1px solid white; border-radius: 8px; margin: 8px 0; padding: 8px;">
-        <div class="chore-details" style="font-weight: bold; margin-bottom: 8px;">
-          ${chore.name}
-        </div>
-        <div class="chore-dropdowns" style="display: flex; gap: 8px;">
-          ${orderedIndexes
-            .map((dayIndex) => {
-              const isSelected =
-                chore.selections &&
-                chore.selections[dayIndex] &&
-                chore.selections[dayIndex] !== "";
+        <div class="chore-row">
+            <div class="chore-name">${chore.name}</div>
+            <div class="chore-dropdowns">
+                ${orderedIndexes
+                  .map((dayIndex) => {
+                    const hasValue =
+                      chore.selections &&
+                      chore.selections[dayIndex] &&
+                      chore.selections[dayIndex] !== "";
+                    const isDisabled = isDisabledCallback(dayIndex, hasValue);
 
-              const isDisabled = isDayDisabled(dayIndex, isSelected);
-
-              return `
-                <select
-                  class="day-dropdown"
-                  data-section="${section}"
-                  data-row-index="${rowIndex}"
-                  data-day-index="${dayIndex}"
-                  ${isDisabled ? "disabled" : ""}
-                >
-                  <option value="" ${!isSelected ? "selected" : ""}>--</option>
-                  ${this.users
-                    .map(
-                      (user) =>
-                        `<option value="${user.name}" ${
-                          isSelected === user.name ? "selected" : ""
-                        }>${user.name}</option>`
-                    )
-                    .join("")}
-                </select>
-              `;
-            })
-            .join("")}
+                    return `
+                        <div class="grid-cell">
+                            <select class="user-dropdown" 
+                                    data-section="${section}" 
+                                    data-row="${rowIndex}" 
+                                    data-day="${dayIndex}" 
+                                    ${isDisabled ? "disabled" : ""}
+                                    onchange="this.getRootNode().host.handleDropdownChange(event)">
+                                <option value="">--</option>
+                                ${this.users
+                                  .map(
+                                    (user) =>
+                                      `<option value="${user.name}" ${
+                                        hasValue &&
+                                        chore.selections[dayIndex] ===
+                                          user.name
+                                          ? "selected"
+                                          : ""
+                                      }>${user.name}</option>`).join("")}
+                            </select>
+                        </div>
+                    `;
+                  })
+                  .join("")}
+            </div>
         </div>
-      </div>
     `;
   }
 

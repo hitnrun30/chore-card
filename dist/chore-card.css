@@ -81,39 +81,56 @@ h1 {
   padding: 4px;
 }
 
+/* Styles for the chore row */
 .chore-row {
-  border: 2px solid #ccc; /* Light gray border */
-  border-radius: 8px; /* Rounded corners */
-  margin-bottom: 8px; /* Spacing between rows */
-  padding: 8px; /* Add some padding for better visuals */
-  display: flex; /* Align items horizontally */
-  align-items: center; /* Center-align items vertically */
+    display: grid;
+    grid-template-columns: 1fr repeat(7, auto);
+    align-items: center;
+    border: 1px solid white;
+    border-radius: 8px;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #222; /* Optional background for better visibility */
 }
 
-.chore-details {
-  flex: 1; /* Make the chore name take up available space */
-  font-weight: bold; /* Highlight the chore name */
+/* Styles for the chore name */
+.chore-name {
+    font-weight: bold;
+    padding-right: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Styles for the dropdowns container */
 .chore-dropdowns {
-  display: flex; /* Align dropdowns horizontally */
-  gap: 8px; /* Add spacing between dropdowns */
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
 }
 
+/* Styles for individual grid cells */
 .grid-cell {
-  text-align: center;
-  padding: 4px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Styles for dropdowns */
+.user-dropdown {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
 }
 
 .grid-cell select:disabled {
   background-color: #f5f5f5;
   color: #a9a9a9; /* Gray out text */
   cursor: not-allowed;
-}
-
-.user-dropdown {
-  width: 100%;
-  padding: 4px;
 }
 
 .user-dropdown:disabled {
