@@ -1097,7 +1097,6 @@ export class ChoreCard extends HTMLElement {
         <div class="chore-dropdowns">
           ${orderedIndexes
             .map((dayIndex) => {
-              const dayName = this.getDayName(dayIndex);
               const isSelected = chore.selections[dayIndex];
               const isDisabled = isDayDisabled(dayIndex, isSelected);
 
@@ -1110,12 +1109,14 @@ export class ChoreCard extends HTMLElement {
                   ${isDisabled ? 'disabled' : ''}
                 >
                   <option value="" ${!isSelected ? 'selected' : ''}>None</option>
-                  ${this.users.map(
-                    (user) =>
-                      `<option value="${user.name}" ${
-                        isSelected === user.name ? 'selected' : ''
-                      }>${user.name}</option>`,
-                  ).join('')}
+                  ${this.users
+                    .map(
+                      (user) =>
+                        `<option value="${user.name}" ${
+                          isSelected === user.name ? 'selected' : ''
+                        }>${user.name}</option>`
+                    )
+                    .join('')}
                 </select>
               `;
             })
@@ -1124,6 +1125,7 @@ export class ChoreCard extends HTMLElement {
       </div>
     `;
   }
+
 
   getCurrentWeekOfMonth() {
     const now = new Date();
