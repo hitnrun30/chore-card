@@ -245,6 +245,12 @@ export class ChoreCard extends HTMLElement {
               throw new Error('Invalid saved state format.');
           }
 
+          // Parse weekly chores' days into arrays
+          savedState.data.weekly = savedState.data.weekly.map((chore) => ({
+            ...chore,
+            day: chore.day ? chore.day.split(',').map((d) => d.trim()) : [] // Convert back to an array
+          }));
+          
           this.lastSavedState = savedState; // Assign saved state            
         } else if (response.status === 404) {
             console.warn(`No saved state found for card: ${this.cardId}`);
@@ -297,12 +303,20 @@ export class ChoreCard extends HTMLElement {
     console.log(`Saving state to: ${stateUrl}`);
 
     try {
+        const updatedData = {
+          ...this.data,
+          weekly: this.data.weekly.map((chore) => ({
+              ...chore,
+              day: Array.isArray(chore.day) ? chore.day.join(', ') : chore.day // Convert to a string
+          })),
+        };
         // Prepare the state payload
         const state = {
             cardId: this.cardId,
-            data: this.data || {}, // Chore data
+            data: updatedData || {}, // Chore data
             userPoints: this.userPoints || {}, // User points
             lastReset: this.lastReset || null, // Last reset date
+            archivedStates: this.lastSavedState.archivedStates || [], // Include archived states    
             firstDayOfWeek: this.firstDayOfWeek, // Option
             showLongDayNames: this.showLongDayNames, // Option
             pointsPosition: this.pointsPosition, // Option
@@ -697,34 +711,18 @@ export class ChoreCard extends HTMLElement {
   async resetWeeklyChores() {
     console.log('Resetting all chores for the new week...');
     
-    // Step 1: Archive current state
-    const archiveUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}_archive`;
-    const archiveData = {
+    const archiveEntry = {
         timestamp: new Date().toISOString(),
         data: this.data,
         userPoints: this.userPoints,
         lastReset: this.lastReset,
     };
+    
+    // If the archive doesn't exist, create it
+    this.lastSavedState.archivedStates = this.lastSavedState.archivedStates || [];
+    this.lastSavedState.archivedStates.push(archiveEntry);
 
-    try {
-        console.log('Archiving current state...');
-        const response = await fetch(archiveUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.haToken}`,
-            },
-            body: JSON.stringify({ state: JSON.stringify(archiveData) }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to archive state: ${response.statusText}`);
-        }
-
-        console.log('State archived successfully.');
-    } catch (error) {
-        console.error('Error archiving state:', error);
-    }
+    console.log('Archived current state:', archiveEntry);
 
     // Step 2: Clear all chore selections
     console.log('Clearing all chore selections...');
