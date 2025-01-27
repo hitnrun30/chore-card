@@ -1,0 +1,12 @@
+{
+  "name": "chore-card",
+  "content_in_root": false,
+  "description": "Customizable Lovelace dashboard card for tracking and managing chores",
+  "filename": "chore-card.js",
+  "main": "chore-card.js",
+  "iot_class": "Local Polling",
+  "render_readme": true,
+  "version": "1.0.4",
+  "repository": "git@github.com:hitnrun30/chore-card",
+  "license": "MIT"
+}
