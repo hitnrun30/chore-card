@@ -75,49 +75,26 @@ h1 {
   margin: 10px 0;
 }
 
-/* Chore row layout */
-.chore-row {
-    display: grid;
-    grid-template-columns: 1fr repeat(7, 1fr); /* 1 column for the chore name, 7 for dropdowns */
-    gap: 8px; /* Spacing between cells */
-    align-items: center;
-    border: 1px solid white; /* Border around the whole row */
-    border-radius: 8px;
-    margin: 8px 0;
-    padding: 8px;
-    background-color: #222; /* Optional: background for rows */
-}
-
-/* Chore name styling */
 .chore-name {
-    grid-column: 1; /* First column */
-    font-weight: bold;
-    padding-right: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  grid-column: 1; /* Ensure chores stay in the first column */
+  text-align: left;
+  padding: 4px;
 }
 
-/* Dropdown styling */
 .grid-cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.user-dropdown {
-    width: 100%;
-    padding: 4px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #333;
-    color: white;
+  text-align: center;
+  padding: 4px;
 }
 
 .grid-cell select:disabled {
   background-color: #f5f5f5;
   color: #a9a9a9; /* Gray out text */
   cursor: not-allowed;
+}
+
+.user-dropdown {
+  width: 100%;
+  padding: 4px;
 }
 
 .user-dropdown:disabled {

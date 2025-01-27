@@ -1131,7 +1131,7 @@ export class ChoreCard extends HTMLElement {
                   .join("")}
             `;
   }
-  
+
   getCurrentWeekOfMonth() {
     const now = new Date();
     const firstDayOfWeek = this.firstDayOfWeek || "Monday"; // Default to Monday if not set
