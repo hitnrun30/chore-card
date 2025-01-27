@@ -859,28 +859,24 @@ export class ChoreCard extends HTMLElement {
               ? chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1)
               : null;
 
-              if (chore.day && specificDayIndexes.length === 0) {
-                console.error(`Invalid day value(s) for chore: ${chore.name}, Days: ${chore.day}`);
-            }
+          return this.renderChoreRow(
+              chore,
+              rowIndex,
+              'weekly',
+              orderedIndexes,   
+              (dayIndex, hasValue) => {
+                  // Disable all days except the specific ones if days are set
+                  if (specificDayIndexes !== null) {
+                      return !specificDayIndexes.includes(dayIndex) && !hasValue;
+                  }
 
-            return this.renderChoreRow(
-                chore,
-                rowIndex,
-                'weekly',
-                orderedIndexes,
-                (dayIndex, hasValue) => {
-                    // Disable all days except the specific ones if days are set
-                    if (specificDayIndexes !== null) {
-                        return !specificDayIndexes.includes(dayIndex) && !hasValue;
-                    }
+                  // If no specific days, disable the row if a selection exists
+                  const isRowDisabled =
+                      chore.selections && chore.selections.some((sel) => sel);
 
-                    // If no specific days, disable the row if a selection exists
-                    const isRowDisabled =
-                        chore.selections && chore.selections.some((sel) => sel);
-
-                    return isRowDisabled && !hasValue;
-                }
-            );
+                  return isRowDisabled && !hasValue;
+              }
+          );
         })
         .join('');
 
