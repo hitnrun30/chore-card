@@ -852,13 +852,16 @@ export class ChoreCard extends HTMLElement {
 
     html += chores
         .map((chore, rowIndex) => {
+            // Use `days` instead of `day`
             const specificDayIndexes =
-                typeof chore.day === 'string' && chore.day.trim() !== ''
-                    ? chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1)
+                Array.isArray(chore.days) && chore.days.length > 0
+                    ? chore.days
+                          .map((day) => this.getDayIndex(day.trim()))
+                          .filter((index) => index !== -1) // Only valid indexes
                     : null;
 
             if (specificDayIndexes && specificDayIndexes.length === 0) {
-                console.error(`Invalid day(s) for chore: ${chore.name}, Days: ${chore.day}`);
+                console.error(`Invalid days for chore: ${chore.name}, Days: ${chore.days}`);
             }
 
             return this.renderChoreRow(
