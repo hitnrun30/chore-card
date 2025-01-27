@@ -205,6 +205,20 @@ export class ChoreCard extends HTMLElement {
     this.users = yamlData.users || []; // Default to empty array
     this.data = yamlData.chores || []; // Default to empty array
 
+    // Normalize `days` for weekly chores
+    if (this.data.weekly) {
+      this.data.weekly.forEach((chore) => {
+        chore.days =
+          typeof chore.days === "string"
+            ? chore.days
+                .split(",")
+                .map((day) => this.normalizeDayName(day.trim()))
+            : Array.isArray(chore.days)
+              ? chore.days.map((day) => this.normalizeDayName(day.trim()))
+              : [];
+      });
+    }
+
     // Construct and return the default state object
     const defaultState = {
       cardId: this.cardId,
@@ -583,16 +597,17 @@ export class ChoreCard extends HTMLElement {
           }
 
           if (section === "weekly") {
-            const normalizedDays = this.normalizeDays(yamlChore.days); // Handle multiple days
-
-            if (
-              JSON.stringify(normalizedDays) !== JSON.stringify(savedChore.days)
-            ) {
-              console.log(`Days changed for weekly chore: ${yamlChore.name}`);
-              savedChore.selections = Array(7).fill(null); // Clear all user selections
-              savedChore.days = normalizedDays; // Update to the new days
-              choreUpdated = true;
-            }
+            // Normalize the `days` field
+            yamlChore.days =
+              typeof yamlChore.days === "string"
+                ? yamlChore.days
+                    .split(",")
+                    .map((day) => this.normalizeDayName(day.trim()))
+                : Array.isArray(yamlChore.days)
+                  ? yamlChore.days.map((day) =>
+                      this.normalizeDayName(day.trim()),
+                    )
+                  : [];
           }
 
           if (section === "monthly") {
@@ -654,44 +669,35 @@ export class ChoreCard extends HTMLElement {
 
   normalizeDayName(dayName) {
     if (!dayName || typeof dayName !== "string") {
-      console.warn("Invalid day name:", dayName);
-      return undefined;
+        console.warn("Invalid day name:", dayName);
+        return undefined;
     }
-    const shortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const longDays = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
 
-    const normalizedDay = dayName.toLowerCase();
-    const shortIndex = shortDays.findIndex(
-      (day) => day.toLowerCase() === normalizedDay,
-    );
-    const longIndex = longDays.findIndex(
-      (day) => day.toLowerCase() === normalizedDay,
-    );
+    const dayMap = {
+        sun: "Sun",
+        mon: "Mon",
+        tue: "Tue",
+        wed: "Wed",
+        thu: "Thu",
+        fri: "Fri",
+        sat: "Sat",
+        sunday: "Sun",
+        monday: "Mon",
+        tuesday: "Tue",
+        wednesday: "Wed",
+        thursday: "Thu",
+        friday: "Fri",
+        saturday: "Sat",
+    };
 
-    if (shortIndex !== -1) return shortDays[shortIndex];
-    if (longIndex !== -1) return shortDays[longIndex];
+    const normalizedDay = dayMap[dayName.toLowerCase()];
+    if (!normalizedDay) {
+        console.warn(`Invalid day name: ${dayName}`);
+        return undefined;
+    }
 
-    // Return undefined for invalid days
-    console.warn(`Invalid day name: ${dayName}`);
-    return undefined;
-  }
-
-  normalizeDays(days) {
-    if (!days) return [];
-    // Split on commas and normalize each day
-    return days
-      .split(",")
-      .map((day) => this.normalizeDayName(day))
-      .filter(Boolean);
-  }
+    return normalizedDay;
+}
 
   isValidCssColor(color) {
     const s = new Option().style;
