@@ -710,21 +710,25 @@ export class ChoreCard extends HTMLElement {
 
   async resetWeeklyChores() {
     console.log('Resetting all chores for the new week...');
-    
+
+    // Step 1: Ensure lastSavedState is initialized
+    this.lastSavedState = this.lastSavedState || {};
+
+    // Step 2: Archive current state within the current sensor
     const archiveEntry = {
         timestamp: new Date().toISOString(),
         data: this.data,
         userPoints: this.userPoints,
         lastReset: this.lastReset,
     };
-    
-    // If the archive doesn't exist, create it
+
+    // Ensure archivedStates array exists
     this.lastSavedState.archivedStates = this.lastSavedState.archivedStates || [];
     this.lastSavedState.archivedStates.push(archiveEntry);
 
     console.log('Archived current state:', archiveEntry);
 
-    // Step 2: Clear all chore selections
+    // Step 3: Clear all chore selections
     console.log('Clearing all chore selections...');
     ['daily', 'weekly', 'monthly'].forEach((section) => {
         if (this.data[section]) {
@@ -734,17 +738,20 @@ export class ChoreCard extends HTMLElement {
         }
     });
 
-    // Step 3: Reset user points
+    // Step 4: Reset user points
     console.log('Resetting user points...');
     Object.keys(this.userPoints).forEach((user) => {
         this.userPoints[user] = 0;
     });
 
-    // Step 4: Save the reset state to Home Assistant
+    // Step 5: Update the last reset timestamp
+    this.lastReset = new Date().toISOString();
+
+    // Step 6: Save the reset state to Home Assistant
     console.log('Saving reset state...');
     await this.saveStateToHomeAssistant();
 
-    // Step 5: Re-render the UI
+    // Step 7: Re-render the UI
     console.log('Re-rendering card...');
     this.render();
   }
@@ -847,12 +854,12 @@ export class ChoreCard extends HTMLElement {
 
     html += chores
         .map((chore, rowIndex) => {
-            const specificDayIndexes = 
-                chore.day ? 
-                chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1) : 
-                null;
+          const specificDayIndexes = 
+          typeof chore.day === 'string' && chore.day.trim() !== '' 
+              ? chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1)
+              : null;
 
-            if (chore.day && specificDayIndexes.length === 0) {
+              if (chore.day && specificDayIndexes.length === 0) {
                 console.error(`Invalid day value(s) for chore: ${chore.name}, Days: ${chore.day}`);
             }
 
