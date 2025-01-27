@@ -75,26 +75,22 @@ h1 {
   margin: 10px 0;
 }
 
-.chore-name {
-  grid-column: 1; /* Ensure chores stay in the first column */
-  text-align: left;
-  padding: 4px;
-}
-
-/* Styles for the chore row */
+/* Chore row layout */
 .chore-row {
     display: grid;
-    grid-template-columns: 1fr repeat(7, auto);
+    grid-template-columns: 1fr repeat(7, 1fr); /* 1 column for the chore name, 7 for dropdowns */
+    gap: 8px; /* Spacing between cells */
     align-items: center;
-    border: 1px solid white;
+    border: 1px solid white; /* Border around the whole row */
     border-radius: 8px;
     margin: 8px 0;
     padding: 8px;
-    background-color: #222; /* Optional background for better visibility */
+    background-color: #222; /* Optional: background for rows */
 }
 
-/* Styles for the chore name */
+/* Chore name styling */
 .chore-name {
+    grid-column: 1; /* First column */
     font-weight: bold;
     padding-right: 8px;
     white-space: nowrap;
@@ -102,22 +98,13 @@ h1 {
     text-overflow: ellipsis;
 }
 
-/* Styles for the dropdowns container */
-.chore-dropdowns {
-    display: flex;
-    gap: 8px;
-    justify-content: space-between;
-}
-
-/* Styles for individual grid cells */
+/* Dropdown styling */
 .grid-cell {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Styles for dropdowns */
 .user-dropdown {
     width: 100%;
     padding: 4px;
