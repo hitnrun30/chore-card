@@ -13,6 +13,8 @@ export class ChoreCard extends HTMLElement {
     this.pointsPosition = "top"; // Default: points displayed at the top
     this.dayHeaderBackgroundColor = "blue"; // Default: blue background
     this.dayHeaderFontColor = "white"; // Default: white text
+    this.currentDayBackgroundColor = "red";
+    this.currentDayFontColor = "white";
 
     // Default values for other state-related properties
     this.data = {}; // Default: no chore data
@@ -87,6 +89,9 @@ export class ChoreCard extends HTMLElement {
     this.dayHeaderBackgroundColor =
       config.day_header_background_color || "blue";
     this.dayHeaderFontColor = config.day_header_font_color || "white";
+    this.currentDayBackgroundColor =
+      config.current_day_background_color || "red";
+    this.currentDayFontColor = config.current_day_font_color || "white";
 
     console.log("Configuration set:", this.config);
 
@@ -200,6 +205,9 @@ export class ChoreCard extends HTMLElement {
     this.dayHeaderBackgroundColor =
       yamlData.day_header_background_color || "blue";
     this.dayHeaderFontColor = yamlData.day_header_font_color || "white";
+    this.currentDayBackgroundColor =
+      yamlData.current_day_background_color || "red";
+    this.currentDayFontColor = yamlData.current_day_font_color || "white";
 
     this.users = yamlData.users || []; // Default to empty array
     this.data = yamlData.chores || []; // Default to empty array
@@ -226,6 +234,8 @@ export class ChoreCard extends HTMLElement {
       pointsPosition: this.pointsPosition,
       dayHeaderBackgroundColor: this.dayHeaderBackgroundColor,
       dayHeaderFontColor: this.dayHeaderFontColor,
+      currentDayBackgroundColor: this.current_day_background_color,
+      currentDayFontColor: this.current_day_font_color,
       lastReset: this.lastReset || null,
       users: this.users,
       userPoints: {},
@@ -343,6 +353,8 @@ export class ChoreCard extends HTMLElement {
         pointsPosition: this.pointsPosition, // Option
         dayHeaderBackgroundColor: this.dayHeaderBackgroundColor, // Option
         dayHeaderFontColor: this.dayHeaderFontColor, // Option
+        currentDayBackgroundColor: this.current_day_background_color,
+        currentDayFontColor: this.current_day_font_color,
         users: this.users || [], // Users
       };
 
@@ -401,6 +413,11 @@ export class ChoreCard extends HTMLElement {
         stateKey: "dayHeaderBackgroundColor",
       },
       { yamlKey: "day_header_font_color", stateKey: "dayHeaderFontColor" },
+      {
+        yamlKey: "current_day_background_color",
+        stateKey: "currentDayBackgroundColor",
+      },
+      { yamlKey: "current_day_font_color", stateKey: "currentDayFontColor " },
     ];
 
     let optionsChanged = false;
@@ -436,6 +453,18 @@ export class ChoreCard extends HTMLElement {
         yamlValue = stateKey === "dayHeaderBackgroundColor" ? "blue" : "white"; // Defaults
       }
 
+      // Validate CSS colors for background and font
+      if (
+        (stateKey === "currentDayBackgroundColor" ||
+          stateKey === "currentDayFontColor") &&
+        !this.isValidCssColor(yamlValue)
+      ) {
+        console.warn(
+          `Invalid CSS color for ${stateKey}: ${yamlValue}. Falling back to default.`,
+        );
+        yamlValue = stateKey === "currentDayBackgroundColor" ? "red" : "white"; // Defaults
+      }
+
       // If YAML and saved state values are different, mark as changed
       if (yamlValue !== savedValue) {
         console.log(
@@ -456,6 +485,8 @@ export class ChoreCard extends HTMLElement {
       this.pointsPosition,
       this.dayHeaderBackgroundColor,
       this.dayHeaderFontColor,
+      this.currentDayBackgroundColor,
+      this.currentDayFontColor,
     );
 
     return optionsChanged;
@@ -871,29 +902,48 @@ export class ChoreCard extends HTMLElement {
 
   renderWeekDays() {
     const orderedIndexes = this.getOrderedDayIndexes();
-    if (!orderedIndexes)
-      return '<div class="day-header">Invalid Week Start</div>';
+    if (!orderedIndexes) {
+        return '<div class="day-header">Invalid Week Start</div>';
+    }
 
     const daysOfWeek = this.showLongDayNames
-      ? [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-        ]
-      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        ? [
+              "Sunday",
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+          ]
+        : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    const dayHeaders = orderedIndexes.map(
-      (index) =>
-        `<div class="day-header" style="background-color: ${this.dayHeaderBackgroundColor}; color: ${this.dayHeaderFontColor};">${daysOfWeek[index]}</div>`,
-    );
+    const currentDayIndex = new Date().getDay(); // Get current day index (0 = Sunday, 1 = Monday, etc.)
+
+    const dayHeaders = orderedIndexes.map((index) => {
+        const isCurrentDay = index === currentDayIndex;
+
+        // Determine styles based on whether it's the current day
+        const backgroundColor = isCurrentDay
+            ? this.currentDayBackgroundColor
+            : this.dayHeaderBackgroundColor;
+
+        const fontColor = isCurrentDay
+            ? this.currentDayFontColor
+            : this.dayHeaderFontColor;
+
+        return `
+            <div 
+                class="day-header" 
+                style="background-color: ${backgroundColor}; color: ${fontColor};">
+                ${daysOfWeek[index]}
+            </div>
+        `;
+    });
 
     // Add a transparent placeholder column at the start
     dayHeaders.unshift(
-      `<div class="day-header empty" style="background-color: transparent; border: none;"></div>`,
+        `<div class="day-header empty" style="background-color: transparent; border: none;"></div>`
     );
 
     return dayHeaders.join("");
@@ -1040,46 +1090,39 @@ export class ChoreCard extends HTMLElement {
     return html;
   }
 
-  renderChoreRow(chore, rowIndex, section, orderedIndexes, isDisabledCallback) {
+  renderChoreRow(chore, rowIndex, section, orderedIndexes, isDayDisabled) {
     return `
-                <div class="chore-name" style="background-color: ${
-                  chore.highlightColor || "transparent"
-                };">${chore.name}</div>
-                ${orderedIndexes
-                  .map((dayIndex) => {
-                    const hasValue =
-                      chore.selections &&
-                      chore.selections[dayIndex] &&
-                      chore.selections[dayIndex] !== "";
-                    const isDisabled = isDisabledCallback(dayIndex, hasValue);
+      <div class="chore-row">
+        <div class="chore-details">${chore.name}</div>
+        <div class="chore-dropdowns">
+          ${orderedIndexes
+            .map((dayIndex) => {
+              const dayName = this.getDayName(dayIndex);
+              const isSelected = chore.selections[dayIndex];
+              const isDisabled = isDayDisabled(dayIndex, isSelected);
 
-                    return `
-                            <div class="grid-cell">
-                                <select class="user-dropdown" 
-                                        data-section="${section}" 
-                                        data-row="${rowIndex}" 
-                                        data-day="${dayIndex}" 
-                                        ${isDisabled ? "disabled" : ""}
-                                        onchange="this.getRootNode().host.handleDropdownChange(event)">
-                                    <option value="">--</option>
-                                    ${this.users
-                                      .map(
-                                        (user) =>
-                                          `<option value="${user.name}" ${
-                                            hasValue &&
-                                            chore.selections[dayIndex] ===
-                                              user.name
-                                              ? "selected"
-                                              : ""
-                                          }>${user.name}</option>`,
-                                      )
-                                      .join("")}
-                                </select>
-                            </div>
-                        `;
-                  })
-                  .join("")}
-            `;
+              return `
+                <select
+                  class="day-dropdown"
+                  data-section="${section}"
+                  data-row-index="${rowIndex}"
+                  data-day-index="${dayIndex}"
+                  ${isDisabled ? 'disabled' : ''}
+                >
+                  <option value="" ${!isSelected ? 'selected' : ''}>None</option>
+                  ${this.users.map(
+                    (user) =>
+                      `<option value="${user.name}" ${
+                        isSelected === user.name ? 'selected' : ''
+                      }>${user.name}</option>`,
+                  ).join('')}
+                </select>
+              `;
+            })
+            .join('')}
+        </div>
+      </div>
+    `;
   }
 
   getCurrentWeekOfMonth() {

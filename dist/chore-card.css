@@ -81,6 +81,25 @@ h1 {
   padding: 4px;
 }
 
+.chore-row {
+  border: 2px solid #ccc; /* Light gray border */
+  border-radius: 8px; /* Rounded corners */
+  margin-bottom: 8px; /* Spacing between rows */
+  padding: 8px; /* Add some padding for better visuals */
+  display: flex; /* Align items horizontally */
+  align-items: center; /* Center-align items vertically */
+}
+
+.chore-details {
+  flex: 1; /* Make the chore name take up available space */
+  font-weight: bold; /* Highlight the chore name */
+}
+
+.chore-dropdowns {
+  display: flex; /* Align dropdowns horizontally */
+  gap: 8px; /* Add spacing between dropdowns */
+}
+
 .grid-cell {
   text-align: center;
   padding: 4px;
