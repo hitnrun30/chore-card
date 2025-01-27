@@ -1092,14 +1092,18 @@ export class ChoreCard extends HTMLElement {
 
   renderChoreRow(chore, rowIndex, section, orderedIndexes, isDayDisabled) {
     return `
-      <div class="chore-row">
-        <div class="chore-details">${chore.name}</div>
-        <div class="chore-dropdowns">
+      <div class="chore-row" style="border: 1px solid white; border-radius: 8px; margin: 8px 0; padding: 8px;">
+        <div class="chore-details" style="font-weight: bold; margin-bottom: 8px;">
+          ${chore.name}
+        </div>
+        <div class="chore-dropdowns" style="display: flex; gap: 8px;">
           ${orderedIndexes
             .map((dayIndex) => {
-              const isSelected = chore.selections &&
-                      chore.selections[dayIndex] &&
-                      chore.selections[dayIndex] !== "";
+              const isSelected =
+                chore.selections &&
+                chore.selections[dayIndex] &&
+                chore.selections[dayIndex] !== "";
+
               const isDisabled = isDayDisabled(dayIndex, isSelected);
 
               return `
@@ -1108,26 +1112,25 @@ export class ChoreCard extends HTMLElement {
                   data-section="${section}"
                   data-row-index="${rowIndex}"
                   data-day-index="${dayIndex}"
-                  ${isDisabled ? 'disabled' : ''}
+                  ${isDisabled ? "disabled" : ""}
                 >
-                  <option value="" ${!isSelected ? 'selected' : ''}>None</option>
+                  <option value="" ${!isSelected ? "selected" : ""}>--</option>
                   ${this.users
                     .map(
                       (user) =>
                         `<option value="${user.name}" ${
-                          isSelected === user.name ? 'selected' : ''
+                          isSelected === user.name ? "selected" : ""
                         }>${user.name}</option>`
                     )
-                    .join('')}
+                    .join("")}
                 </select>
               `;
             })
-            .join('')}
+            .join("")}
         </div>
       </div>
     `;
   }
-
 
   getCurrentWeekOfMonth() {
     const now = new Date();
