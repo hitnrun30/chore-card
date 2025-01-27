@@ -1097,7 +1097,9 @@ export class ChoreCard extends HTMLElement {
         <div class="chore-dropdowns">
           ${orderedIndexes
             .map((dayIndex) => {
-              const isSelected = chore.selections[dayIndex];
+              const isSelected = chore.selections &&
+                      chore.selections[dayIndex] &&
+                      chore.selections[dayIndex] !== "";
               const isDisabled = isDayDisabled(dayIndex, isSelected);
 
               return `
