@@ -1,5 +1,3 @@
-import * as jsYaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
-
 const BASE_PATH = '/hacsfiles/chore-card/';
 
 export class ChoreCard extends HTMLElement {
@@ -854,34 +852,38 @@ export class ChoreCard extends HTMLElement {
 
     html += chores
         .map((chore, rowIndex) => {
-          const specificDayIndexes = 
-          typeof chore.day === 'string' && chore.day.trim() !== '' 
-              ? chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1)
-              : null;
+            const specificDayIndexes =
+                typeof chore.day === 'string' && chore.day.trim() !== ''
+                    ? chore.day.split(',').map((day) => this.getDayIndex(day.trim())).filter((index) => index !== -1)
+                    : null;
 
-          return this.renderChoreRow(
-              chore,
-              rowIndex,
-              'weekly',
-              orderedIndexes,   
-              (dayIndex, hasValue) => {
-                  // Disable all days except the specific ones if days are set
-                  if (specificDayIndexes !== null) {
-                      return !specificDayIndexes.includes(dayIndex) && !hasValue;
-                  }
+            if (specificDayIndexes && specificDayIndexes.length === 0) {
+                console.error(`Invalid day(s) for chore: ${chore.name}, Days: ${chore.day}`);
+            }
 
-                  // If no specific days, disable the row if a selection exists
-                  const isRowDisabled =
-                      chore.selections && chore.selections.some((sel) => sel);
+            return this.renderChoreRow(
+                chore,
+                rowIndex,
+                'weekly',
+                orderedIndexes,
+                (dayIndex, hasValue) => {
+                    // Disable all days except the specific ones if days are set
+                    if (specificDayIndexes !== null) {
+                        return !specificDayIndexes.includes(dayIndex) && !hasValue;
+                    }
 
-                  return isRowDisabled && !hasValue;
-              }
-          );
+                    // If no specific days are set, disable the row if a selection exists
+                    const isRowDisabled =
+                        chore.selections && chore.selections.some((sel) => sel);
+
+                    return isRowDisabled && !hasValue;
+                }
+            );
         })
         .join('');
 
     return html;
-  }
+}
 
   renderMonthlyChores(header, chores) {
     const orderedIndexes = this.getOrderedDayIndexes();
