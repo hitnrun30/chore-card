@@ -951,7 +951,7 @@ export class ChoreCard extends HTMLElement {
 
     // Add a transparent placeholder column at the start
     dayHeaders.unshift(
-        `<div class="day-header empty" style="background-color: transparent; border: none;"></div>`
+        `<div class="day-header empty"></div>`
     );
 
     return dayHeaders.join("");

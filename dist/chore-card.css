@@ -66,6 +66,9 @@ h1 {
 .day-header.empty {
   background-color: transparent;
   border: none; /* Optional: Remove border for cleaner design */
+  position: sticky;
+  left: 0;
+  z-index: 101;
 }
 
 .section-header {
@@ -88,7 +91,7 @@ h1 {
 
 /* Chore Name Styling */
 .chore-name {
-    padding: 5px;    
+  margin-right: 5px;
 }
 
 /* Chore Selections Layout */
@@ -156,9 +159,11 @@ h1 {
 /* Sticky Top Container: Keeps the score and day headers at the top */
 .sticky-top-container {
     position: sticky;
-    top: 0;
     z-index: 1000;
-    background-color: black; /* Prevents overlap */
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    top: var(--sticky-header-offset, 48px); /* Adjusts based on Home Assistant's header */
 }
 
 /* Sticky Bottom Container: Keeps the score at the bottom */
@@ -166,20 +171,13 @@ h1 {
     position: sticky;
     bottom: 0;
     z-index: 1000;
-    background-color: black;
 }
 
 /* Style the weekday headers */
 .day-headers {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background-color: black;
-    border-bottom: 1px solid white;
-}
-
-/* Optional: Add a shadow effect for visibility */
-.sticky-top-container, .sticky-bottom-container {
-    box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+    grid-template-columns: 1fr repeat(7, 1fr);
+    gap: 5px; /* Adjust spacing */
 }
 
 /* Responsive adjustments */
