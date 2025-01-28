@@ -877,8 +877,12 @@ export class ChoreCard extends HTMLElement {
     const gridContent = `
                 <div class="card">
                     <div class="sticky-top-container">
-                        ${this.pointsPosition === "top" ? scorecard : ""}
-                        ${this.renderWeekDays()} <!-- Render the days of the week -->
+                        <div id="top-scorecard" class="scorecard">
+                            ${this.pointsPosition === "top" ? scorecard : ""}
+                        </div>
+                        <div class="day-headers">
+                            ${this.renderWeekDays()} <!-- Render the days of the week -->
+                        </div>
                     </div>
                     <div class="grid">
                         
@@ -888,7 +892,9 @@ export class ChoreCard extends HTMLElement {
                         ${this.data.monthly ? this.renderChoreGrid("Monthly Chores", this.data.monthly, "monthly") : ""}
                     </div>
                     <div class="sticky-bottom-container">
-                        ${this.pointsPosition === "bottom" ? scorecard : ""}
+                        <div id="bottom-scorecard" class="scorecard">
+                            ${this.pointsPosition === "bottom" ? scorecard : ""}
+                        </div>
                     </div>
                 </div>
             `;
