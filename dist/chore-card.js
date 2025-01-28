@@ -432,51 +432,48 @@ export class ChoreCard extends HTMLElement {
     console.log("Saved state after update:", savedState);
 
     stateOptions.forEach(({ yamlKey, stateKey }) => {
-      let yamlValue = yamlData[yamlKey];
-      let savedValue = savedState[stateKey];
+        let yamlValue = yamlData[yamlKey] !== undefined ? yamlData[yamlKey] : savedState[stateKey];
+        let savedValue = savedState[stateKey];
 
-      // Normalize `first_day_of_week`
-      if (stateKey === "firstDayOfWeek") {
-        yamlValue = yamlValue ? this.normalizeDayName(yamlValue) : "Mon";
-        savedValue = savedValue ? this.normalizeDayName(savedValue) : "Mon";
-      }
+        // Normalize `first_day_of_week`
+        if (stateKey === "firstDayOfWeek") {
+            yamlValue = yamlValue ? this.normalizeDayName(yamlValue) : "Mon";
+            savedValue = savedValue ? this.normalizeDayName(savedValue) : "Mon";
+        }
 
-      // Validate CSS colors for background and font
-      if (
-        (stateKey === "dayHeaderBackgroundColor" ||
-          stateKey === "dayHeaderFontColor") &&
-        !this.isValidCssColor(yamlValue)
-      ) {
-        console.warn(
-          `Invalid CSS color for ${stateKey}: ${yamlValue}. Falling back to default.`,
-        );
-        yamlValue = stateKey === "dayHeaderBackgroundColor" ? "blue" : "white"; // Defaults
-      }
+        // Validate CSS colors for day header and font
+        if (
+            (stateKey === "dayHeaderBackgroundColor" || stateKey === "dayHeaderFontColor") &&
+            yamlValue !== undefined &&
+            !this.isValidCssColor(yamlValue)
+        ) {
+            console.warn(`Invalid CSS color for ${stateKey}: ${yamlValue}. Falling back to default.`);
+            yamlValue = stateKey === "dayHeaderBackgroundColor" ? "blue" : "white"; // Defaults
+        }
 
-      // Validate CSS colors for background and font
-      if (
-        (stateKey === "currentDayBackgroundColor" ||
-          stateKey === "currentDayFontColor") &&
-        !this.isValidCssColor(yamlValue)
-      ) {
-        console.warn(
-          `Invalid CSS color for ${stateKey}: ${yamlValue}. Falling back to default.`,
-        );
-        yamlValue = stateKey === "currentDayBackgroundColor" ? "red" : "white"; // Defaults
-      }
+        // Validate CSS colors for current day
+        if (
+            (stateKey === "currentDayBackgroundColor" || stateKey === "currentDayFontColor") &&
+            yamlValue !== undefined &&
+            !this.isValidCssColor(yamlValue)
+        ) {
+            console.warn(`Invalid CSS color for ${stateKey}: ${yamlValue}. Falling back to default.`);
+            yamlValue = stateKey === "currentDayBackgroundColor" ? "red" : "white"; // Defaults
+        }
 
-      // If YAML and saved state values are different, mark as changed
-      if (yamlValue !== savedValue) {
-        console.log(
-          `Option changed: ${stateKey} from ${savedValue} to ${yamlValue}`,
-        );
-        savedState[stateKey] = yamlValue; // Update the saved state with the YAML value
-        optionsChanged = true;
-      }
+        // Only update if YAML provided a value different from the saved state
+        if (yamlValue !== undefined && yamlValue !== savedValue) {
+            console.log(`Option changed: ${stateKey} from ${savedValue} to ${yamlValue}`);
+            savedState[stateKey] = yamlValue; // Update the saved state with the YAML value
+            optionsChanged = true;
+        }
 
-      // Always update the constructor variables
-      this[stateKey] = yamlValue || this[stateKey];
+        // Always update the constructor variables, but only if YAML provides a value
+        if (yamlValue !== undefined) {
+            this[stateKey] = yamlValue;
+        }
     });
+
 
     console.log(
       "Options updated:",
