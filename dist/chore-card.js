@@ -417,7 +417,7 @@ export class ChoreCard extends HTMLElement {
         yamlKey: "current_day_background_color",
         stateKey: "currentDayBackgroundColor",
       },
-      { yamlKey: "current_day_font_color", stateKey: "currentDayFontColor " },
+      { yamlKey: "current_day_font_color", stateKey: "currentDayFontColor" },
     ];
 
     let optionsChanged = false;

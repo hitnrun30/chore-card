@@ -80,19 +80,15 @@ h1 {
     grid-template-columns: 1fr 7fr; /* 1 column for the name, 7 for the dropdowns */
     align-items: center;
     border: 1px solid white; /* Border around the whole row */
-    border-radius: 8px;
-    margin: 8px 0;
-    padding: 8px;
-    background-color: #222;
+    border-radius: 5px;
+    grid-column: span 8;
+    padding: 5px; 
+    margin-bottom: -6px;
 }
 
 /* Chore Name Styling */
 .chore-name {
-    font-weight: bold;
-    padding: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 5px;    
 }
 
 /* Chore Selections Layout */
@@ -149,6 +145,12 @@ h1 {
   font-weight: bold;
   font-size: 14px;
   text-align: center;
+  border: 1px solid white;
+  min-width: 75px;
+}
+
+.user-scores-row {
+    gap: 5px; /* Adds spacing between scorecards */
 }
 
 /* Responsive adjustments */
