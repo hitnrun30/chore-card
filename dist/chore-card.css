@@ -74,31 +74,55 @@ h1 {
   margin: 10px 0;
 }
 
+/* Chore Row Layout */
 .chore-row {
-  grid-column: span 8;
-  margin: 10px 0;
+    display: grid;
+    grid-template-columns: 1fr 7fr; /* 1 column for the name, 7 for the dropdowns */
+    align-items: center;
+    border: 1px solid white; /* Border around the whole row */
+    border-radius: 8px;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #222;
 }
 
+/* Chore Name Styling */
 .chore-name {
-  grid-column: 1; /* Ensure chores stay in the first column */
-  text-align: left;
-  padding: 4px;
+    font-weight: bold;
+    padding: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Chore Selections Layout */
+.chore-selections {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 equal dropdowns */
+    gap: 8px;
+    align-items: center;
+}
+
+/* Dropdown Styling */
 .grid-cell {
-  text-align: center;
-  padding: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-dropdown {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
 }
 
 .grid-cell select:disabled {
   background-color: #f5f5f5;
   color: #a9a9a9; /* Gray out text */
   cursor: not-allowed;
-}
-
-.user-dropdown {
-  width: 100%;
-  padding: 4px;
 }
 
 .user-dropdown:disabled {
