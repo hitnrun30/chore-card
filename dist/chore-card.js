@@ -1055,6 +1055,8 @@ export class ChoreCard extends HTMLElement {
 
     const currentWeekOfMonth = this.getCurrentWeekOfMonth();
 
+    console.log(`Current Week of Month: ${currentWeekOfMonth}`);
+
     let html = `<div class="section-header">${header}</div>`;
 
     html += chores
@@ -1132,7 +1134,7 @@ export class ChoreCard extends HTMLElement {
 
   getCurrentWeekOfMonth() {
     const now = new Date();
-    const firstDayOfWeek = this.firstDayOfWeek || "Monday"; // Default to Monday if not set
+    const firstDayOfWeek = this.normalizeDayName(this.firstDayOfWeek || "Monday"); // Default to Monday if not set
     const shortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const firstDayIndex = shortDays.indexOf(firstDayOfWeek);
 
