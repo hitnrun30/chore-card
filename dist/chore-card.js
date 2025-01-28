@@ -1055,8 +1055,6 @@ export class ChoreCard extends HTMLElement {
 
     const currentWeekOfMonth = this.getCurrentWeekOfMonth();
 
-    console.log(`Current Week of Month: ${currentWeekOfMonth}`);
-
     let html = `<div class="section-header">${header}</div>`;
 
     html += chores
@@ -1095,7 +1093,9 @@ export class ChoreCard extends HTMLElement {
   renderChoreRow(chore, rowIndex, section, orderedIndexes, isDisabledCallback) {
     return `
         <div class="chore-row">
-            <div class="chore-name">${chore.name}</div>
+            <div class="chore-name"style="background-color: ${
+                  chore.highlightColor || "transparent"
+                };">${chore.name}</div>
             <div class="chore-selections">
                 ${orderedIndexes
                   .map((dayIndex) => {
