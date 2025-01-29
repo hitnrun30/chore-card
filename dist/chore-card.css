@@ -66,9 +66,7 @@ h1 {
 .day-header.empty {
   background-color: transparent;
   border: none; /* Optional: Remove border for cleaner design */
-  position: sticky;
   left: 0;
-  z-index: 101;
 }
 
 .section-header {
@@ -158,8 +156,6 @@ h1 {
 
 /* Sticky Top Container: Keeps the score and day headers at the top */
 .sticky-top-container {
-    position: sticky;
-    z-index: 1000;
     display: flex;
     flex-direction: column;
     width: 95%;
@@ -168,9 +164,8 @@ h1 {
 
 /* Sticky Bottom Container: Keeps the score at the bottom */
 .sticky-bottom-container {
-    position: sticky;
     bottom: 0;
-    z-index: 1000;
+
 }
 
 /* Style the weekday headers */

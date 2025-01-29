@@ -26,16 +26,18 @@ export class ChoreCard extends HTMLElement {
 
     // Dynamically determine base URL and card ID
     this.apiBaseUrl = this.getAttribute("api-base-url") || ""; // Default: Home Assistant API
-    let storedCardId = localStorage.getItem("chore-card-id");
-    if (storedCardId) {
-      this.cardId = storedCardId;
-    } else {
-      // Generate and save a new ID if not present
+    let storedCardId = localStorage.getItem('chore-card-id');
+
+    // If the storedCardId is missing or invalid, create a new one
+    if (!storedCardId || storedCardId === 'undefined' || storedCardId === 'null') {
       storedCardId = `chore-card-${Date.now()}`;
-      this.cardId = storedCardId.toLowerCase().replace(/[^a-z0-9_]/g, "_");
-      localStorage.setItem("chore-card-id", this.cardId);
+      storedCardId = storedCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      localStorage.setItem('chore-card-id', storedCardId);
     }
+
+    this.cardId = storedCardId;
     console.log(`Sanitized cardId: ${this.cardId}`);
+
 
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set
@@ -210,19 +212,22 @@ export class ChoreCard extends HTMLElement {
     this.currentDayFontColor = yamlData.current_day_font_color || "white";
 
     this.users = yamlData.users || []; // Default to empty array
-    this.data = yamlData.chores || []; // Default to empty array
+    this.data = JSON.parse(JSON.stringify(yamlData.chores || {})); // Deep copy to make mutable
 
     // Normalize `days` for weekly chores
     if (this.data.weekly) {
-      this.data.weekly.forEach((chore) => {
-        chore.days =
-          typeof chore.days === "string"
-            ? chore.days
-                .split(",")
-                .map((day) => this.normalizeDayName(day.trim()))
-            : Array.isArray(chore.days)
-              ? chore.days.map((day) => this.normalizeDayName(day.trim()))
-              : [];
+      this.data.weekly = this.data.weekly.map((chore) => {
+        return {
+          ...chore, // Clone the chore to avoid modifying frozen objects
+          days:
+            typeof chore.days === "string"
+              ? chore.days
+                  .split(",")
+                  .map((day) => this.normalizeDayName(day.trim()))
+              : Array.isArray(chore.days)
+                ? chore.days.map((day) => this.normalizeDayName(day.trim()))
+                : [],
+        };
       });
     }
 
@@ -234,8 +239,8 @@ export class ChoreCard extends HTMLElement {
       pointsPosition: this.pointsPosition,
       dayHeaderBackgroundColor: this.dayHeaderBackgroundColor,
       dayHeaderFontColor: this.dayHeaderFontColor,
-      currentDayBackgroundColor: this.current_day_background_color,
-      currentDayFontColor: this.current_day_font_color,
+      currentDayBackgroundColor: this.currentDayBackgroundColor,
+      currentDayFontColor: this.currentDayFontColor,
       lastReset: this.lastReset || null,
       users: this.users,
       userPoints: {},
@@ -370,6 +375,7 @@ export class ChoreCard extends HTMLElement {
         attributes: {
           ...state, // Include the state data in the attributes field
           friendly_name: friendlyName, // Optional: add a human-readable name
+          restored: true,
         },
       };
 
