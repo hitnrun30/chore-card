@@ -554,8 +554,17 @@ export class ChoreCard extends HTMLElement {
         savedUser.font_color != validatedFont
       ) {
         console.log(`Updating color for user: ${yamlUser.name}`);
-        savedUser.background_color = validatedColor; // Update the color
-        savedUser.font_color = validatedFont;
+        const updatedUser = {
+          ...savedUser, // Clone existing user properties
+          background_color: validatedColor,
+          font_color: validatedFont
+        };
+
+        // Find and replace the user in savedUsers
+        const userIndex = savedUsers.findIndex(user => user.name === yamlUser.name);
+        if (userIndex !== -1) {
+          savedUsers[userIndex] = updatedUser; // Replace the frozen object
+        }
         usersChanged = true;
       }
     });
