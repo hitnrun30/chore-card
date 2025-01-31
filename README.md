@@ -15,6 +15,8 @@ The **Chore Card** is a customizable Lovelace dashboard card for tracking and ma
 
 ## Installation
 
+Use HACS or
+  
 1. **Download the Files**:
    Clone or download the repository and copy the following files to your Home Assistant setup:
    - `chore-card.js`
@@ -51,6 +53,8 @@ views:
         points_position: top
         day_header_background_color: lightblue
         day_header_font_color: black
+        current_day_background_color: red
+        current_day_font_color: white
         users:
           - name: Alice
             background_color: lightpink
@@ -111,7 +115,7 @@ views:
 
 ---
 
-## Customization Options
+## Display Options
 
 | Option                      | Type    | Default        | Description                                                |
 |-----------------------------|---------|----------------|------------------------------------------------------------|
@@ -120,8 +124,27 @@ views:
 | `points_position`           | String  | `top`          | Positions the points display (`top` or `bottom`).          |
 | `day_header_background_color` | String | `blue`         | Background color for the day headers.                     |
 | `day_header_font_color`     | String  | `white`        | Font color for the day headers.                           |
-| `users`                     | List    | `[]`           | List of users with optional background colors.             |
-| `chores`                    | Object  | `{}`           | Definitions for `daily`, `weekly`, and `monthly` chores.   |
+| `current_day_background_color` | String | `red`         | Background color for the day headers.                     |
+| `current_day_font_color`     | String  | `white`        | Font color for the day headers.                           |
+
+## User Options
+
+| Option                      | Type    | Default        | Description                                                |
+|-----------------------------|---------|----------------|------------------------------------------------------------|
+| `name`                     | String   | ``             | User name                                                  |
+| `background_color`          | String  | `transparent`  | Background color for the name.                      |
+| `font_color`                | String  | `white`        | Font color for the name.                      |
+
+## Chore Options
+
+| Option                      | Type    | Default  | Section   | Description                                                |
+|-----------------------------|---------|----------|-----------|------------------------------------------------------------|
+| `name`                      | String   | ``      | `All`     | chore name                                                  |
+| `points`                    | Integer  | ``      | `All`     | Points for the chore   |
+| `days`                      | String   | ``      | `Weekly`  | Days of the week the chore is done                      |
+| `week`                      | String   | ``      | `Monthly` | Week of the month the chore is done based on the first day of the week |
+| `highlight_color`           | String   | `red`   | `Monthly` | Background color for the chore if the week is set          |
+| `max_days`                  | String   | `1`     | `Monthly` | How many days the chore will take to do.          |
 
 ---
 
