@@ -16,7 +16,7 @@ The **Chore Card** is a customizable Lovelace dashboard card for tracking and ma
 ## Installation
 
 Use HACS or
-  
+
 1. **Download the Files**:
    Clone or download the repository and copy the following files to your Home Assistant setup:
    - `chore-card.js`
@@ -131,7 +131,7 @@ views:
 
 | Option                      | Type    | Default        | Description                                                |
 |-----------------------------|---------|----------------|------------------------------------------------------------|
-| `name`                     | String   | ``             | User name                                                  |
+| `name`                     | String   |              | User name                                                  |
 | `background_color`          | String  | `transparent`  | Background color for the name.                      |
 | `font_color`                | String  | `white`        | Font color for the name.                      |
 
@@ -139,10 +139,10 @@ views:
 
 | Option                      | Type    | Default  | Section   | Description                                                |
 |-----------------------------|---------|----------|-----------|------------------------------------------------------------|
-| `name`                      | String   | ``      | `All`     | chore name                                                  |
-| `points`                    | Integer  | ``      | `All`     | Points for the chore   |
-| `days`                      | String   | ``      | `Weekly`  | Days of the week the chore is done                      |
-| `week`                      | String   | ``      | `Monthly` | Week of the month the chore is done based on the first day of the week |
+| `name`                      | String   |       | `All`     | chore name                                                  |
+| `points`                    | Integer  |       | `All`     | Points for the chore   |
+| `days`                      | String   |       | `Weekly`  | Days of the week the chore is done                      |
+| `week`                      | String   |       | `Monthly` | Week of the month the chore is done based on the first day of the week |
 | `highlight_color`           | String   | `red`   | `Monthly` | Background color for the chore if the week is set          |
 | `max_days`                  | String   | `1`     | `Monthly` | How many days the chore will take to do.          |
 
