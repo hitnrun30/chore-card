@@ -881,16 +881,16 @@ export class ChoreCard extends HTMLElement {
 
     const gridContent = `
       <div class="card">
-        <!-- Top fixed section (scorecard shown only if needed) -->
-        <div class="sticky-top-container ${isScoreAtBottom ? "no-score" : ""}">
+        <!-- Fixed Top Section -->
+        <div class="sticky-top-container">
           ${isScoreAtTop ? `<div id="top-scorecard" class="scorecard">${scorecard}</div>` : ""}
           <div class="day-headers">
-            ${this.renderWeekDays()} <!-- Render the days of the week -->
+            ${this.renderWeekDays()} <!-- Day headers stay fixed -->
           </div>
         </div>
 
         <!-- Scrollable Grid -->
-        <div class="grid-container ${isScoreAtBottom ? "score-at-bottom" : ""}">
+        <div class="grid-container ${isScoreAtTop ? "score-at-top" : "score-at-bottom"}">
           <div class="grid">
             <div class="empty-row"></div>
             ${this.data.daily ? this.renderChoreGrid("Daily Chores", this.data.daily, "daily") : ""}
@@ -899,13 +899,12 @@ export class ChoreCard extends HTMLElement {
           </div>
         </div>
 
-        <!-- Bottom fixed section (only show when scorecard is at bottom) -->
+        <!-- Fixed Bottom Section -->
         <div class="sticky-bottom-container ${isScoreAtBottom ? "show" : ""}">
           ${isScoreAtBottom ? `<div id="bottom-scorecard" class="scorecard">${scorecard}</div>` : ""}
         </div>
       </div>
     `;
-
 
     // Create a container for proper width handling
     const container = document.createElement("div");

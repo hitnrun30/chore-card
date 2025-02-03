@@ -53,16 +53,19 @@ h1 {
   width: 95%;
   flex-grow: 1; /* Allows it to take up remaining space */
   overflow-y: auto; /* Enables vertical scrolling */
-  margin-top: 80px; /* Space for sticky top */
-  margin-bottom: 50px; /* Space for sticky bottom */
   height: calc(100% - 140px); /* Adjust height dynamically */
   box-sizing: border-box;
 }
 
 /* If scorecard is on the bottom, adjust spacing for grid */
 .grid-container.score-at-bottom {
-  margin-top: 50px; /* Reduce space above grid */
-  margin-bottom: 80px; /* Add more space for bottom */
+  margin-top: 120px; /* Reduce space above grid */ 
+}
+
+/* Reduce margin if the score is at the bottom */
+.grid-container.score-at-bottom {
+  margin-top: 50px;
+  padding-bottom: 90px; /* Space for bottom score */
 }
 
 /* Ensure the grid fills available space */
@@ -95,6 +98,16 @@ h1 {
   color: var(--day-header-font-color, #000); /* Default font color */
   padding: 8px;
   border-radius: 4px;
+}
+
+/* Style the weekday headers */
+.day-headers {
+    display: grid;
+    grid-template-columns: 1fr repeat(7, 1fr);
+    gap: 5px; /* Adjust spacing */
+    position: sticky;
+    top: 40px; /* Ensure it's below the scorecard */
+    z-index: 10;
 }
 
 .day-header.empty {
@@ -219,11 +232,12 @@ h1 {
   display: flex;
 }
 
-/* Style the weekday headers */
-.day-headers {
-    display: grid;
-    grid-template-columns: 1fr repeat(7, 1fr);
-    gap: 5px; /* Adjust spacing */
+/* Ensure the scorecard and headers remain fixed */
+.sticky-top-container .scorecard,
+.sticky-top-container .day-headers {
+  position: sticky;
+  top: 0;
+  z-index: 11;
 }
 
 /* Responsive adjustments */
