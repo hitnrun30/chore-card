@@ -59,6 +59,12 @@ h1 {
   box-sizing: border-box;
 }
 
+/* If scorecard is on the bottom, adjust spacing for grid */
+.grid-container.score-at-bottom {
+  margin-top: 50px; /* Reduce space above grid */
+  margin-bottom: 80px; /* Add more space for bottom */
+}
+
 /* Ensure the grid fills available space */
 .grid-container::-webkit-scrollbar {
   width: 8px;
@@ -189,9 +195,13 @@ h1 {
   width: 95%;
   position: absolute;
   top: 0;
-  background-color: white;
   z-index: 10;
   padding: 10px 0;
+}
+
+/* If the scorecard is on the bottom, reduce top container height */
+.sticky-top-container.no-score {
+  padding: 5px 0;
 }
 
 /* Sticky Bottom Container: Stays at the bottom */
@@ -199,9 +209,14 @@ h1 {
   position: absolute;
   bottom: 0;
   width: 95%;
-  background-color: white;
   z-index: 10;
   padding: 10px 0;
+  display: none; /* Default hidden */
+}
+
+/* Show sticky-bottom-container only when scorecard is set to bottom */
+.sticky-bottom-container.show {
+  display: flex;
 }
 
 /* Style the weekday headers */
