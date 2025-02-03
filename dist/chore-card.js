@@ -890,7 +890,7 @@ export class ChoreCard extends HTMLElement {
         </div>
 
         <!-- Scrollable Grid -->
-        <div class="grid-container ${isScoreAtTop ? "score-at-top" : "score-at-bottom"}">
+        <div class="grid-container">
           <div class="grid">
             <div class="empty-row"></div>
             ${this.data.daily ? this.renderChoreGrid("Daily Chores", this.data.daily, "daily") : ""}
