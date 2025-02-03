@@ -886,12 +886,13 @@ export class ChoreCard extends HTMLElement {
                             ${this.renderWeekDays()} <!-- Render the days of the week -->
                         </div>
                     </div>
-                    <div class="grid">
-                        
-                        <div class="empty-row"></div>
-                        ${this.data.daily ? this.renderChoreGrid("Daily Chores", this.data.daily, "daily") : ""}
-                        ${this.data.weekly ? this.renderChoreGrid("Weekly Chores", this.data.weekly, "weekly") : ""}
-                        ${this.data.monthly ? this.renderChoreGrid("Monthly Chores", this.data.monthly, "monthly") : ""}
+                    <div class="grid-container">
+                      <div class="grid">                        
+                          <div class="empty-row"></div>
+                          ${this.data.daily ? this.renderChoreGrid("Daily Chores", this.data.daily, "daily") : ""}
+                          ${this.data.weekly ? this.renderChoreGrid("Weekly Chores", this.data.weekly, "weekly") : ""}
+                          ${this.data.monthly ? this.renderChoreGrid("Monthly Chores", this.data.monthly, "monthly") : ""}
+                      </div>
                     </div>
                     <div class="sticky-bottom-container">
                         <div id="bottom-scorecard" class="scorecard">
