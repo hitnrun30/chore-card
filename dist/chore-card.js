@@ -889,7 +889,7 @@ export class ChoreCard extends HTMLElement {
           </div>
         </div>
 
-        <!-- Scrollable Grid -->
+        <!-- Scrollable Grid Container -->
         <div class="grid-container">
           <div class="grid">
             <div class="empty-row"></div>
@@ -899,7 +899,7 @@ export class ChoreCard extends HTMLElement {
           </div>
         </div>
 
-        <!-- Fixed Bottom Section -->
+        <!-- Fixed Bottom Section (Scorecard at Bottom) -->
         <div class="sticky-bottom-container ${isScoreAtBottom ? "show" : ""}">
           ${isScoreAtBottom ? `<div id="bottom-scorecard" class="scorecard">${scorecard}</div>` : ""}
         </div>
