@@ -1,106 +1,148 @@
-/* Main card styling - Flexbox to allow scrolling in the middle */
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  height: calc(100vh - 20px); /* Ensures the card takes up most of the screen */
-  max-height: 90vh;
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden; /* Prevents the entire card from scrolling */
-}
-
-/* Sticky Top Container - Holds scorecard (if at top) and day headers */
-.sticky-top-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  flex-shrink: 0;
-  z-index: 10;
-  padding: 10px 0;
-}
-
-/* Scorecard inside sticky top */
-.sticky-top-container .scorecard {
-  position: sticky;
-  top: 0;
-  z-index: 11;
-}
-
-/* Day headers remain fixed below the scorecard */
-.day-headers {
-  display: grid;
-  grid-template-columns: 1fr repeat(7, 1fr);
-  gap: 5px;
-  position: sticky;
-  top: 40px; /* Ensure it's below the scorecard */
-  z-index: 10;
-  background-color: black; /* Ensure it doesn't overlap */
-  padding: 5px 0;
-}
-
-/* Sticky Bottom Container - Only shows if the scorecard is at the bottom */
-.sticky-bottom-container {
-  display: flex;
-  width: 100%;
-  flex-shrink: 0;
-  z-index: 10;
-  padding: 10px 0;
-  display: none; /* Default hidden */
-}
-
-/* Show bottom scorecard only when needed */
-.sticky-bottom-container.show {
-  display: flex;
-}
-
-/* Grid Container - Only the grid scrolls */
-.grid-container {
-  width: 100%;
-  flex-grow: 1; /* Expands to fill available space */
-  overflow-y: auto; /* Enables vertical scrolling */
-  box-sizing: border-box;
-}
-
-/* Grid Content */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr repeat(7, 1fr);
-  gap: 5px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Scrollbar Styling */
-.grid-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.grid-container::-webkit-scrollbar-thumb {
-  background-color: #bbb;
-  border-radius: 4px;
-}
-
-.grid-container::-webkit-scrollbar-track {
-  background: #222;
-}
-
-/* Scorecard Styling */
-.scorecard {
+/* General body styling */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  align-items: flex-start;
+  background-color: #f5f5f5;
+  min-height: 100vh;  
+}
+
+ha-card {
   width: 100%;
-  padding: 10px 0;
+}
+
+.card-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 10px;
   box-sizing: border-box;
 }
 
-/* Individual User Scores */
+/* Container for the test card */
+.container {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;  
+}
+
+/* Header styling */
+h1 {
+  text-align: center;
+  font-size: 24px;
+  margin: 20px 0;
+}
+
+/* Main card styling */
+.card {
+  display: flex;
+  flex-direction: column; /* Ensure vertical stacking of scorecard and grid */
+  align-items: center; /* Center-align items horizontally */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Grid content */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr repeat(7, 1fr); /* Empty column + days */
+  gap: 5px;
+  width: 95%;
+  box-sizing: border-box;
+}
+
+.day-header {
+  text-align: center;
+  font-weight: bold;
+  background-color: var(--day-header-bg, #d3e5f3); /* Default background color */
+  color: var(--day-header-font-color, #000); /* Default font color */
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.day-header.empty {
+  background-color: transparent;
+  border: none; /* Optional: Remove border for cleaner design */
+  left: 0;
+}
+
+.section-header {
+  grid-column: span 8;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+/* Chore Row Layout */
+.chore-row {
+    display: grid;
+    grid-template-columns: 1fr 7fr; /* 1 column for the name, 7 for the dropdowns */
+    align-items: center;
+    border: 1px solid white; /* Border around the whole row */
+    border-radius: 5px;
+    grid-column: span 8;
+    padding: 5px; 
+    margin-bottom: -6px;
+}
+
+/* Chore Name Styling */
+.chore-name {
+  margin-right: 5px;
+}
+
+/* Chore Selections Layout */
+.chore-selections {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 equal dropdowns */
+    gap: 8px;
+    align-items: center;
+}
+
+/* Dropdown Styling */
+.grid-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-dropdown {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+}
+
+.grid-cell select:disabled {
+  background-color: #f5f5f5;
+  color: #a9a9a9; /* Gray out text */
+  cursor: not-allowed;
+}
+
+.user-dropdown:disabled {
+  background-color: #f0f0f0; /* Light gray background */
+  color: #a9a9a9; /* Dimmed text */
+  cursor: not-allowed;
+}
+
+/* Adjust scorecard */
+.scorecard {
+  display: flex;
+  justify-content: center; /* Center the scores in the row */
+  align-items: center; /* Align the items vertically */
+  gap: 10px; /* Add space between scores */
+  width: 100%; /* Ensure the scorecard spans the full width */
+  padding: 10px 0; /* Add some padding around the scores */
+  box-sizing: border-box;
+}
+
 .user-score {
   display: inline-block;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 5px 10px; /* Add spacing inside each score block */
+  border-radius: 4px; /* Rounded corners */
   font-weight: bold;
   font-size: 14px;
   text-align: center;
@@ -108,70 +150,39 @@
   min-width: 75px;
 }
 
-/* Day Headers */
-.day-header {
-  text-align: center;
-  font-weight: bold;
-  background-color: var(--day-header-bg, #d3e5f3);
-  color: var(--day-header-font-color, #000);
-  padding: 8px;
-  border-radius: 4px;
+.user-scores-row {
+    gap: 5px; /* Adds spacing between scorecards */
 }
 
-/* Chore Grid Styling */
-.chore-row {
-  display: grid;
-  grid-template-columns: 1fr repeat(7, 1fr);
-  align-items: center;
-  border: 1px solid white;
-  border-radius: 5px;
-  padding: 5px;
-  margin-bottom: -6px;
+/* Sticky Top Container: Keeps the score and day headers at the top */
+.sticky-top-container {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    top: var(--sticky-header-offset, 48px); /* Adjusts based on Home Assistant's header */
 }
 
-/* Chore Name */
-.chore-name {
-  margin-right: 5px;
+/* Sticky Bottom Container: Keeps the score at the bottom */
+.sticky-bottom-container {
+    bottom: 0;
+
 }
 
-/* Chore Selections */
-.chore-selections {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  align-items: center;
+/* Style the weekday headers */
+.day-headers {
+    display: grid;
+    grid-template-columns: 1fr repeat(7, 1fr);
+    gap: 5px; /* Adjust spacing */
 }
 
-/* Dropdown Styling */
-.grid-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.user-dropdown {
-  width: 100%;
-  padding: 4px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #333;
-  color: white;
-}
-
-.user-dropdown:disabled {
-  background-color: #f0f0f0;
-  color: #a9a9a9;
-  cursor: not-allowed;
-}
-
-/* Responsive Adjustments */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .card {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* Show fewer columns on smaller screens */
   }
 
   .day-header,
   .grid-cell {
-    font-size: 12px;
+    font-size: 12px; /* Reduce font size for smaller screens */
   }
 }
