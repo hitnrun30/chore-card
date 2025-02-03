@@ -24,21 +24,6 @@ export class ChoreCard extends HTMLElement {
     this.lastSavedState = null; // Default: no saved state loaded
     this.initialized = false; // Initialize as false
 
-    // Dynamically determine base URL and card ID
-    this.apiBaseUrl = this.getAttribute("api-base-url") || ""; // Default: Home Assistant API
-    let storedCardId = localStorage.getItem('chore-card-id');
-
-    // If the storedCardId is missing or invalid, create a new one
-    if (!storedCardId || storedCardId === 'undefined' || storedCardId === 'null') {
-      storedCardId = `chore-card-${Date.now()}`;
-      storedCardId = storedCardId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-      localStorage.setItem('chore-card-id', storedCardId);
-    }
-
-    this.cardId = storedCardId;
-    console.log(`Sanitized cardId: ${this.cardId}`);
-
-
     // Placeholder for Home Assistant token
     this.haToken = null; // Default to null until hass is set
 
@@ -49,6 +34,47 @@ export class ChoreCard extends HTMLElement {
     this.initializeCard().catch((error) =>
       console.error("Error initializing ChoreCard:", error),
     );
+  }
+
+  /**
+   * Function to ensure chore_card_id is set and updated in Lovelace YAML
+   */
+  initializeCardId(config) {
+    if (!config.chore_card_id) {
+      // Check localStorage for an existing ID
+      let storedCardId = localStorage.getItem("chore-card-id");
+
+      // If missing or invalid, generate a new one
+      if (!storedCardId || storedCardId === "undefined" || storedCardId === "null") {
+        storedCardId = `chore-card-${Date.now()}`.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+        localStorage.setItem("chore-card-id", storedCardId);
+      }
+
+      console.log(`Generated new chore_card_id: ${storedCardId}`);
+      this.cardId = storedCardId;
+
+      // Update Lovelace YAML with the new ID
+      let updatedConfig = Object.assign({}, config, { chore_card_id: storedCardId });
+      this._updateCardConfig(updatedConfig);
+    } else {
+      // If chore_card_id exists in YAML, use it
+      this.cardId = config.chore_card_id;
+      localStorage.setItem("chore-card-id", this.cardId);
+      console.log(`Using stored cardId from YAML: ${this.cardId}`);
+    }
+  }
+
+  /**
+   * Function to update Lovelace YAML dynamically
+   */
+  _updateCardConfig(newConfig) {
+    const event = new CustomEvent("config-changed", {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+
+    this.dispatchEvent(event);
   }
 
   async initializeCard() {
@@ -77,12 +103,14 @@ export class ChoreCard extends HTMLElement {
   }
 
   setConfig(config) {
-    // Validate and apply the configuration
     if (!config || !config.type) {
       throw new Error("Invalid card configuration");
     }
 
     this.config = config;
+
+    // Ensure card ID is set and saved
+    this.initializeCardId(config);
 
     // Set configuration options with defaults
     this.firstDayOfWeek = config.first_day_of_week || "Mon";
@@ -124,9 +152,7 @@ export class ChoreCard extends HTMLElement {
         this.haToken = hass.auth?.data?.access_token || null;
 
         if (this.haToken) {
-          console.log(
-            "Successfully retrieved Home Assistant token:",
-          );
+          console.log("Successfully retrieved Home Assistant token.");
         } else {
           console.warn("Home Assistant token is not available.");
         }
@@ -143,58 +169,15 @@ export class ChoreCard extends HTMLElement {
         this.initializeCard();
         this.initialized = true;
       } catch (error) {
-        console.error(
-          "Error retrieving Home Assistant token or base URL:",
-          error,
-        );
+        console.error("Error retrieving Home Assistant token or base URL:", error);
       }
     }
   }
-
+  
   get hass() {
     return this._hass;
   }
 
-  /*
-        disconnectedCallback() {
-            console.log(`Card disconnected. Checking if card is being deleted for cardId: ${this.cardId}`);
-
-            // Delay to confirm if the card is actually being deleted
-            setTimeout(() => {
-                if (!document.body.contains(this)) {
-                    console.log(`Card deletion confirmed for cardId: ${this.cardId}`);
-
-                    // Remove the card ID from localStorage
-                    localStorage.removeItem(`chore-card-id-${this.cardId}`);
-
-                    // API call to delete the sensor entity
-                    const deleteUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
-                    fetch(deleteUrl, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${this.haToken}`,
-                        },
-                    })
-                    .then((response) => {
-                        if (response.ok) {
-                            console.log(`Sensor entity sensor.${this.cardId} deleted successfully.`);
-                        } else {
-                            console.error(`Failed to delete sensor entity sensor.${this.cardId}: ${response.statusText}`);
-                        }
-                    })
-                    .catch((error) => {
-                        console.error(`Error deleting sensor entity sensor.${this.cardId}:`, error);
-                    });
-                } else {
-                    console.log(`Card disconnection was temporary for cardId: ${this.cardId}`);
-                }
-            }, 100); // Delay for 100ms to allow DOM updates
-
-            // Call parent disconnectedCallback if needed
-            super.disconnectedCallback && super.disconnectedCallback();
-        }
-        */
   createDefaultState(yamlData) {
     console.log("Creating default state...");
 
