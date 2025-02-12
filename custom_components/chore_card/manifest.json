@@ -1,18 +1,11 @@
 {
     "domain": "chore_card",
     "name": "Chore Card",
-    "version": "1.0.3",   
-    "resources": [
-      {
-        "type": "module",
-        "url": "/hacsfiles/chore-card/chore-card.js"
-      }      
-    ],
+    "version": "1.1.0",   
     "homeassistant": "2025.1.0",
-    "render_readme": true,
-    "zip_release": false,
     "iot_class": "Local Push",
     "documentation": "https://github.com/hitnrun30/chore_card",
+    "issue_tracker": "https://github.com/hitnrun30/chore_card/issues",
     "requirements": [],
     "dependencies": [],
     "codeowners": ["@hitnrun30"]

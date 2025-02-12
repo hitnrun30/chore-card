@@ -78,28 +78,18 @@ export class ChoreCard extends HTMLElement {
   }
 
   async initializeCard() {
-    try {
-      console.log("Initializing Chore Card...");
+    console.log("Initializing Chore Card...");
+    const yamlData = this.config || {};
+    console.log("YAML data:", yamlData);
 
-      // Load YAML configuration
-      const yamlData = this.config || {};
-      console.log("YAML data:", yamlData);
-
-      // Load state from Home Assistant if a token is available
-      if (this.haToken) {
-        await this.loadStateFromHomeAssistant(yamlData);
-      } else {
-        console.warn(
-          "No Home Assistant token available; skipping state loading.",
-        );
-      }
-
-      this.checkForReset();
-      this.render();
-      console.log("Card initialization complete.");
-    } catch (error) {
-      console.error("Error during card initialization:", error);
+    if (this._hass) {
+      await this.loadStateFromSensor(yamlData);
+    } else {
+      console.warn("Home Assistant instance not available; skipping state loading.");
     }
+
+    this.checkForReset();
+    this.render();
   }
 
   setConfig(config) {
@@ -234,162 +224,54 @@ export class ChoreCard extends HTMLElement {
     return defaultState;
   }
 
-  async loadStateFromHomeAssistant(yamlData) {
-    const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
-    console.log(`Attempting to load state for: ${stateUrl}`);
-
-    let savedState;
-
-    try {
-      const response = await fetch(stateUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.haToken}`,
-        },
-      });
-
-      console.log("Response to parse:", response);
-
-      if (response.ok) {
-        const sensorState = await response.json();
-        savedState = sensorState.attributes; // Only parse attributes
-        
-        // Ensure savedState is valid before proceeding
-        if (!savedState || typeof savedState !== "object") {
-          throw new Error("Invalid saved state format.");
-        }
-
-        // Parse weekly chores' days into arrays
-        savedState.data.weekly = savedState.data.weekly.map((chore) => ({
-          ...chore,
-          day: chore.day ? chore.day.split(",").map((d) => d.trim()) : [], // Convert back to an array
-        }));
-
-        this.lastSavedState = savedState; // Assign saved state
-      } else if (response.status === 404) {
-        console.warn(`No saved state found for card: ${this.cardId}`);
-        throw new Error("State not found (404)."); // Trigger catch block for consistency
-      } else {
-        throw new Error(`Failed to load state: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error("Error loading state:", error);
-
-      // Create default state and assign it
-      savedState = this.createDefaultState(yamlData);
-      console.log("Creating default state due to error:", savedState);
-
-      // Save the newly created default state back to Home Assistant
-      try {
-        this.lastSavedState = savedState;
-        await this.saveStateToHomeAssistant();
-        console.log("Default state saved to Home Assistant.");
-        savedState = this.lastSavedState;
-      } catch (saveError) {
-        console.error(
-          "Failed to save default state to Home Assistant:",
-          saveError,
-        );
-      }
-    }
-
-    // Verify and update options
-    const optionsChanged = this.checkAndUpdateOptions(yamlData, savedState);
-    const usersChanged = this.checkAndUpdateUsers(yamlData, savedState);
-    const choresChanged = this.checkAndUpdateChores(yamlData, savedState);
-
-    if (optionsChanged || usersChanged || choresChanged) {
-      console.log("Options updated. Saving updated state...");
-      this.lastSavedState = savedState;
-      await this.saveStateToHomeAssistant();
-    } else {
-      console.log("Options are consistent. No update needed.");
-    }
-
-    return savedState;
-  }
-
-  async saveStateToHomeAssistant() {
-    if (!this.haToken) {
-      console.warn(
-        "No token available. State changes will not be saved to Home Assistant.",
-      );
+  async loadStateFromSensor(yamlData) {
+    if (!this._hass) {
+      console.warn("Home Assistant instance not available.");
       return;
     }
 
-    const stateUrl = `${this.apiBaseUrl}/api/states/sensor.${this.cardId}`;
-    console.log(`Saving state to: ${stateUrl}`);
-
-    try {
-      const updatedData = {
-        ...this.data,
-        weekly: this.data.weekly.map((chore) => ({
-          ...chore,
-          day: Array.isArray(chore.day) ? chore.day.join(", ") : chore.day, // Convert to a string
-        })),
-      };
-      // Prepare the state payload
-      const state = {
-        cardId: this.cardId,
-        data: updatedData || {}, // Chore data
-        userPoints: this.userPoints || {}, // User points
-        lastReset: this.lastReset || null, // Last reset date
-        archivedStates: this.lastSavedState.archivedStates || [], // Include archived states
-        firstDayOfWeek: this.firstDayOfWeek, // Option
-        showLongDayNames: this.showLongDayNames, // Option
-        pointsPosition: this.pointsPosition, // Option
-        dayHeaderBackgroundColor: this.dayHeaderBackgroundColor, // Option
-        dayHeaderFontColor: this.dayHeaderFontColor, // Option
-        currentDayBackgroundColor: this.current_day_background_color,
-        currentDayFontColor: this.current_day_font_color,
-        users: this.users || [], // Users
-      };
-
-      console.log("State to be saved:", state);
-
-      // Check if a friendly_name exists, fallback to title from YAML
-      const friendlyName =
-        this.config.friendly_name || this.config.title || "Chore Card";
-
-      // Construct the payload for the POST request
-      const payload = {
-        state: "active", // Use a valid string to represent the sensor's state
-        attributes: {
-          ...state, // Include the state data in the attributes field
-          friendly_name: friendlyName, // Optional: add a human-readable name
-          restored: true,
-        },
-      };
-
-      console.log("Payload to be sent:", payload);
-
-      // Send POST request
-      const response = await fetch(stateUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.haToken}`, // Include the token
-        },
-        body: JSON.stringify(payload),
-      });
-
-      // Handle the response
-      if (!response.ok) {
-        const errorDetails = await response.text();
-        console.error(
-          `Failed to save state: ${response.status} ${response.statusText}`,
-        );
-        console.error("Error details:", errorDetails);
-        throw new Error(`Failed to save state: ${response.statusText}`);
-      }
-
-      console.log(`State saved successfully for card: ${this.cardId}`);
-      this.lastSavedState = state; // Update the in-memory saved state
-    } catch (error) {
-      console.error(`Error saving state for card: ${this.cardId}`, error);
+    const sensorState = this._hass.states[`sensor.${this.cardId}`];
+    if (sensorState && sensorState.attributes) {
+      console.log("Loaded state from Home Assistant sensor:", sensorState);
+      this.lastSavedState = sensorState.attributes;
+    } else {
+      console.warn("No saved state found, creating default.");
+      this.lastSavedState = this.createDefaultState(yamlData);
+      this.saveStateToHomeAssistant(); // Save default state
     }
   }
+
+
+  async saveStateToHomeAssistant() {
+    if (!this._hass) {
+      console.warn("Home Assistant instance not available.");
+      return;
+    }
+
+    const state = {
+      cardId: this.cardId,
+      data: this.data || {}, // Chore data
+      userPoints: this.userPoints || {}, // User points
+      lastReset: this.lastReset || null, // Last reset date
+      firstDayOfWeek: this.firstDayOfWeek, // Option
+      showLongDayNames: this.showLongDayNames, // Option
+      pointsPosition: this.pointsPosition, // Option
+      dayHeaderBackgroundColor: this.dayHeaderBackgroundColor, // Option
+      dayHeaderFontColor: this.dayHeaderFontColor, // Option
+      currentDayBackgroundColor: this.currentDayBackgroundColor,
+      currentDayFontColor: this.currentDayFontColor,
+      users: this.users || [], // Users
+    };
+
+    console.log("Saving Chore Card state:", state);
+
+    // Use Home Assistant service to update the sensor
+    this._hass.callService("chore_card", "update_state", {
+      entity_id: `sensor.${this.cardId}`,
+      attributes: state,
+    });
+  }
+
 
   checkAndUpdateOptions(yamlData, savedState) {
     console.log("Checking and updating options...");
