@@ -1,0 +1,11 @@
+{
+  "title": "Chore Card",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Chore Card Setup",
+        "description": "Configure the Chore Card integration"
+      }
+    }
+  }
+}

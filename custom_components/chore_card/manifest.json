@@ -9,8 +9,5 @@
     "documentation": "https://github.com/hitnrun30/chore-card",
     "requirements": [],
     "dependencies": [],
-    "codeowners": ["@hitnrun30"],
-    "frontend": {
-      "extra_module_url": "/hacsfiles/chore-card/chore-card.js"
-    }
+    "codeowners": ["@hitnrun30"]
 }

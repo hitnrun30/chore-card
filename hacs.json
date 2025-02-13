@@ -12,8 +12,7 @@
   "release_notes": "https://github.com/hitnrun30/chore-card/releases",
   "zip_release": false,
   "integration_type": "integration",
-  "categories": ["integration", "lovelace"],
-  "frontend": true,  
+  "categories": ["integration"],
   "icons": [
     {
       "type": "icon",
