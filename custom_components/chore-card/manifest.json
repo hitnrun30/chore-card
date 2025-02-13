@@ -1,5 +1,5 @@
 {
-    "domain": "chore_card",
+    "domain": "chore-card",
     "name": "Chore Card",
     "version": "1.1.0",   
     "homeassistant": "2025.1.0",
