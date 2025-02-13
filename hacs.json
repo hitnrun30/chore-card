@@ -13,13 +13,7 @@
   "zip_release": false,
   "integration_type": "integration",
   "categories": ["integration", "lovelace"],
-  "frontend": true,
-  "resources": [
-    {
-      "type": "module",
-      "url": "/hacsfiles/chore-card/chore-card.js"
-    }
-  ],
+  "frontend": true,  
   "icons": [
     {
       "type": "icon",

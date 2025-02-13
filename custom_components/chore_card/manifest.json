@@ -1,11 +1,16 @@
 {
-  "domain": "chore_card",
-  "name": "Chore Card",
-  "version": "1.1.0",
-  "dependencies": [],
-  "codeowners": ["@hitnrun30"],
-  "requirements": [],
-  "iot_class": "Local Push",
-  "integration_type": "integration",
-  "config_flow": false
+    "domain": "chore_card",
+    "name": "Chore Card",
+    "version": "1.1.0",   
+    "homeassistant": "2025.1.0",
+    "render_readme": true,
+    "zip_release": false,
+    "iot_class": "Local Push",
+    "documentation": "https://github.com/hitnrun30/chore-card",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": ["@hitnrun30"],
+    "frontend": {
+      "extra_module_url": "/hacsfiles/chore-card/chore-card.js"
+    }
 }
