@@ -20,5 +20,6 @@
       "type": "module",
       "url": "/hacsfiles/chore-card/chore-card.js"
     }
-  ]
+  ],
+  "icon": "https://raw.githubusercontent.com/hitnrun30/chore-card/main/icon.png"
 }
