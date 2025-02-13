@@ -2,7 +2,7 @@
   "name": "Chore Card",
   "description": "A Home Assistant Lovelace card and integration for tracking chores.",
   "country": "US",
-  "domains": ["sensor"],
+  "domains": ["chore_card"],
   "homeassistant": "2021.0.0",
   "content_in_root": false,
   "iot_class": "Local Push",
@@ -11,10 +11,9 @@
   "issue_tracker": "https://github.com/hitnrun30/chore-card/issues",
   "release_notes": "https://github.com/hitnrun30/chore-card/releases",
   "zip_release": false,
-  "domain": "chore_card",
   "integration_type": "integration",
   "categories": ["integration", "lovelace"],
-  "frontend": true, 
+  "frontend": true,
   "resources": [
     {
       "type": "module",
