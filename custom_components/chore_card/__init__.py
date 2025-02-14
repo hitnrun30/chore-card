@@ -1,67 +1,57 @@
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import discovery
+from homeassistant.helpers.typing import ConfigType
 import os
 import shutil
 import logging
 
 DOMAIN = "chore_card"
-
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Chore Card integration."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
-    # Register services
-    async def handle_reset_chores(call):
-        """Reset chores for all registered cards."""
-        for entity in hass.data[DOMAIN].values():
-            await entity.reset_chores()
-
-    hass.services.async_register(DOMAIN, "reset_chores", handle_reset_chores)
-
-    # Ensure frontend files are placed correctly
-    await async_copy_frontend_files(hass)
-
-    # Discover platform (e.g., sensor)
-    await discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
+    # Register the frontend
+    await async_register_frontend(hass)
 
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Chore Card from a config entry."""
+    """Set up Chore Card from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
-    
-    # Forward setup to the sensor platform
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+
+    # Register frontend resources
+    await async_register_frontend(hass)
 
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return True
 
-async def async_copy_frontend_files(hass: HomeAssistant):
-    """Ensure that frontend files are copied to /www/community/chore-card/"""
+async def async_register_frontend(hass: HomeAssistant):
+    """Ensure frontend files are available for Lovelace."""
     frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
-    dest_dir = hass.config.path("www/community/chore-card/")  # Target location
+    dest_dir = hass.config.path("www/community/chore-card")
 
-    os.makedirs(dest_dir, exist_ok=True)  # Ensure destination exists
+    # Ensure destination exists
+    os.makedirs(dest_dir, exist_ok=True)
 
     for filename in ["chore-card.js", "chore-card.css"]:
-        source_file = os.path.join(frontend_dir, filename)
-        dest_file = os.path.join(dest_dir, filename)
+        source_path = os.path.join(frontend_dir, filename)
+        dest_path = os.path.join(dest_dir, filename)
 
-        if os.path.exists(source_file):
+        if os.path.exists(source_path):
             try:
-                shutil.copy(source_file, dest_file)
+                shutil.copy(source_path, dest_path)
                 _LOGGER.info(f"Copied {filename} to {dest_dir}")
             except Exception as e:
                 _LOGGER.error(f"Error copying {filename}: {e}")
+
+    # Register Lovelace resources dynamically
+    hass.http.register_static_path("/community_plugin/chore-card", dest_dir, cache_headers=True)
+    
+    _LOGGER.info("Chore Card frontend registered at /community_plugin/chore-card")
