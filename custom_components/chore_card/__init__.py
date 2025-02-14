@@ -12,6 +12,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Chore Card integration."""
     hass.data.setdefault(DOMAIN, {})
 
+    _LOGGER.info("Chore Card frontend installing")
     # Register the frontend
     await async_register_frontend(hass)
 
@@ -38,7 +39,8 @@ async def async_register_frontend(hass: HomeAssistant):
     dest_dir = hass.config.path("www/community/chore-card")
 
     # Ensure destination exists
-    os.makedirs(dest_dir, exist_ok=True)
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
 
     for filename in ["chore-card.js", "chore-card.css"]:
         source_path = os.path.join(frontend_dir, filename)
