@@ -9,10 +9,11 @@ DOMAIN = "chore_card"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    _LOGGER.info("Chore Card frontend installing")
+
     """Set up the Chore Card integration."""
     hass.data.setdefault(DOMAIN, {})
-
-    _LOGGER.info("Chore Card frontend installing")
+    
     # Register the frontend
     await async_register_frontend(hass)
 
