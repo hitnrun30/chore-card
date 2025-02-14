@@ -8,6 +8,10 @@
     "iot_class": "Local Push",
     "documentation": "https://github.com/hitnrun30/chore-card",
     "requirements": [],
-    "dependencies": [],
+    "dependencies": [
+        "http",
+        "frontend",
+        "lovelace"
+    ],
     "codeowners": ["@hitnrun30"]
 }
