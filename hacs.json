@@ -5,7 +5,7 @@
   "domains": ["sensor"],
   "homeassistant": "2025.1.0",
   "content_in_root": false,
-  "iot_class": "Local Push",
+  "iot_class": "local_polling",
   "render_readme": true,
   "documentation": "https://github.com/hitnrun30/chore-card",
   "issue_tracker": "https://github.com/hitnrun30/chore-card/issues",
