@@ -3,7 +3,7 @@
   "description": "A Home Assistant Lovelace card and integration for tracking chores.",
   "country": "US",
   "domains": ["sensor"],
-  "homeassistant": "2021.0.0",
+  "homeassistant": "2025.1.0",
   "content_in_root": false,
   "iot_class": "Local Push",
   "render_readme": true,
