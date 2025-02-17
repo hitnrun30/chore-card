@@ -1,19 +1,12 @@
 {
-    "domain": "chore_card",
-    "name": "Chore Card",
-    "version": "1.1.0",   
-    "homeassistant": "2025.1.0",
-    "render_readme": true,
-    "zip_release": false,
-    "iot_class": "local_polling",
-    "documentation": "https://github.com/hitnrun30/chore-card",
-    "issue_tracker": "https://github.com/hitnrun30/chore-card/issues",
-    "requirements": [],
-    "dependencies": [
-        "http",
-        "frontend",
-        "lovelace"
-    ],
-    "integration_type": "hub",
-    "codeowners": ["@hitnrun30"]
+  "domain": "chore_card",
+  "name": "Chore Card",
+  "version": "1.1.0",
+  "documentation": "https://github.com/hitnrun30/chore-card",
+  "dependencies": [],
+  "requirements": [],
+  "codeowners": ["@hitnrun30"],
+  "config_flow": false,
+  "integration_type": "integration",
+  "iot_class": "local_push"
 }
