@@ -3,59 +3,39 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 
 DOMAIN = "chore_card"
 LOGGER = logging.getLogger(__name__)
 
-async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback, discovery_info=None
-):
-    """Set up Chore Card sensor from YAML configuration."""
+async def async_setup_platform(hass: HomeAssistant, config, async_add_entities, discovery_info=None):
+    """Set up Chore Card sensor from YAML."""
     if discovery_info is None:
         return
 
     LOGGER.info("Setting up Chore Card sensor from YAML.")
     async_add_entities([ChoreCardSensor(hass, "chore_card_default")], True)
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up Chore Card sensor from a config entry."""
     LOGGER.info("Setting up Chore Card sensor from entry.")
 
-    entity_registry = await async_get_registry(hass)
-    existing_entities = {
-        entry.entity_id: entry for entry in entity_registry.entities.values()
-        if entry.domain == "sensor" and entry.platform == DOMAIN
-    }
+    entity_id = "sensor.chore_card_default"
+    sensor = ChoreCardSensor(hass, entity_id)
 
-    sensors = []
-    for entity_id in existing_entities.keys():
-        card_id = entity_id.split(".")[-1]  # Extract the unique card ID
-        sensors.append(ChoreCardSensor(hass, card_id))
+    async_add_entities([sensor], True)
 
-    if not sensors:
-        # Create a default sensor if none exist
-        sensors.append(ChoreCardSensor(hass, "chore_card_default"))
-
-    async_add_entities(sensors, True)
-
-    # Store sensor references
+    # Store sensor reference for service calls
     hass.data.setdefault(DOMAIN, {})
-    for sensor in sensors:
-        hass.data[DOMAIN][sensor.entity_id] = sensor
+    hass.data[DOMAIN][entity_id] = sensor
 
-    # Register the update_state service
     async def update_state_service(call):
-        """Handle the service call to update a specific sensor state."""
-        entity_id = call.data.get("entity_id")
+        """Handle the service call to update the sensor state."""
+        entity_id = call.data.get("entity_id", "sensor.chore_card_default")
         new_state = call.data.get("state", "active")
         new_attributes = call.data.get("attributes", {})
 
-        if entity_id and entity_id in hass.data[DOMAIN]:
+        if entity_id in hass.data[DOMAIN]:
             sensor = hass.data[DOMAIN][entity_id]
             sensor.update_state(new_state, new_attributes)
             LOGGER.info(f"Updated state for {entity_id}")
@@ -67,28 +47,27 @@ async def async_setup_entry(
 class ChoreCardSensor(SensorEntity):
     """Representation of a Chore Card Sensor."""
 
-    def __init__(self, hass: HomeAssistant, card_id: str):
+    def __init__(self, hass, entity_id):
         """Initialize the sensor."""
         self.hass = hass
-        self.card_id = card_id  # Unique identifier per card
-        self._state = "active"  # Default state
+        self.entity_id = entity_id
+        self._state = "active"
         self._attributes = {
             "status": "Chore tracking running",
-            "data": {},  # Stores chore data
+            "data": {},
             "user_points": {},
             "last_reset": None,
         }
-        self.entity_id = f"sensor.{self.card_id}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Chore Card {self.card_id.replace('_', ' ').title()}"
+        return "Chore Card"
 
     @property
     def unique_id(self):
         """Return a unique ID for the sensor."""
-        return self.card_id
+        return self.entity_id
 
     @property
     def state(self):
