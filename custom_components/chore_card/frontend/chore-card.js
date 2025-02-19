@@ -266,7 +266,7 @@ export class ChoreCard extends HTMLElement {
     console.log("Saving Chore Card state:", state);
 
     // Use Home Assistant service to update the sensor
-    this._hass.callService("chore_card", "update_state", {
+    this._hass.callService("chore_card", "update", {
       entity_id: `sensor.${this.cardId}`,
       attributes: state,
     });
@@ -697,53 +697,49 @@ export class ChoreCard extends HTMLElement {
   }
 
   async resetWeeklyChores() {
-    console.log("Resetting all chores for the new week...");
+    console.log("Requesting manual chore reset...");
 
-    // Step 1: Ensure lastSavedState is initialized
-    this.lastSavedState = this.lastSavedState || {};
+    if (!this._hass) {
+        console.warn("Home Assistant instance not available.");
+        return;
+    }
 
-    // Step 2: Archive current state within the current sensor
-    const archiveEntry = {
-      timestamp: new Date().toISOString(),
-      data: this.data,
-      userPoints: this.userPoints,
-      lastReset: this.lastReset,
-    };
-
-    // Ensure archivedStates array exists
-    this.lastSavedState.archivedStates =
-      this.lastSavedState.archivedStates || [];
-    this.lastSavedState.archivedStates.push(archiveEntry);
-
-    console.log("Archived current state:", archiveEntry);
-
-    // Step 3: Clear all chore selections
-    console.log("Clearing all chore selections...");
-    ["daily", "weekly", "monthly"].forEach((section) => {
-      if (this.data[section]) {
-        this.data[section].forEach((chore) => {
-          chore.selections = Array(7).fill(null); // Reset selections
+    try {
+        // Step 1: Call Home Assistant service to reset the sensor
+        await this._hass.callService("chore_card", "reset_weekly_chores", {
+            entity_id: `sensor.${this.cardId}`
         });
-      }
-    });
 
-    // Step 4: Reset user points
-    console.log("Resetting user points...");
-    Object.keys(this.userPoints).forEach((user) => {
-      this.userPoints[user] = 0;
-    });
+        console.log("Chore reset request sent to Home Assistant.");
 
-    // Step 5: Update the last reset timestamp
-    this.lastReset = new Date().toISOString();
+        // Step 2: Clear selections in the frontend as well (optional but recommended)
+        ["daily", "weekly", "monthly"].forEach((section) => {
+            if (this.data[section]) {
+                this.data[section].forEach((chore) => {
+                    chore.selections = Array(7).fill(null); // Reset selections
+                });
+            }
+        });
 
-    // Step 6: Save the reset state to Home Assistant
-    console.log("Saving reset state...");
-    await this.saveStateToHomeAssistant();
+        // Step 3: Reset user points locally
+        Object.keys(this.userPoints).forEach((user) => {
+            this.userPoints[user] = 0;
+        });
 
-    // Step 7: Re-render the UI
-    console.log("Re-rendering card...");
-    this.render();
+        // Step 4: Update last reset timestamp
+        this.lastReset = new Date().toISOString();
+
+        // Step 5: Save updated state to Home Assistant
+        await this.saveStateToHomeAssistant();
+
+        // Step 6: Re-render UI
+        console.log("Re-rendering card after reset.");
+        this.render();
+    } catch (error) {
+        console.error("Error resetting weekly chores:", error);
+    }
   }
+
 
   render() {
     // Clear the existing content
