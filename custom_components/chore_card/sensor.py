@@ -1,13 +1,12 @@
 import logging
+from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.core import callback
 
 DOMAIN = "chore_card"
 LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: core.HomeAssistant, entry: config_entries.ConfigEntry, async_add_entities):
     """Set up Chore Card sensor from a config entry."""
     entity_id = f"sensor.{entry.entry_id}"
     LOGGER.info(f"Setting up Chore Card sensor: {entity_id}")
@@ -34,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class ChoreCardSensor(SensorEntity):
     """Representation of a Chore Card Sensor."""
 
-    def __init__(self, hass: HomeAssistant, entity_id: str, config_data: dict):
+    def __init__(self, hass: core.HomeAssistant, entity_id: str, config_data: dict):
         """Initialize the sensor with stored chore data."""
         self.hass = hass
         self.entity_id = entity_id

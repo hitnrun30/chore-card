@@ -4,15 +4,16 @@ import logging
 import os
 import pathlib
 
-from homeassistant.core import HomeAssistant
+from homeassistant import core
 from homeassistant.helpers.event import async_call_later
 from homeassistant.components.http import StaticPathConfig
 
 from ..const import URL_BASE, CHORE_CARDS
 _LOGGER = logging.getLogger(__name__)
 
+
 class ChoreCardRegistration:
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: core.HomeAssistant):
         self.hass = hass
 
     async def async_register(self):
