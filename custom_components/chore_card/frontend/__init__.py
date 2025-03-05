@@ -154,10 +154,12 @@ class ChoreCardRegistration:
             _LOGGER.warning("Frontend path does not exist: %s", path)
             return
 
-        gzip_files = [filename for filename in os.listdir(path) if filename.endswith(".gz")]
+        try:
+            gzip_files = [
+                filename for filename in os.listdir(path) if filename and filename.endswith(".gz")
+            ]
 
-        for file in gzip_files:
-            try:
+            for file in gzip_files:
                 original_file = file.replace(".gz", "")
                 original_file_path = os.path.join(path, original_file)
 
@@ -167,5 +169,6 @@ class ChoreCardRegistration:
                 ):
                     _LOGGER.debug(f"Removing outdated gzip file: {file}")
                     os.remove(os.path.join(path, file))
-            except Exception as e:
-                _LOGGER.error("Failed to remove gzip file %s: %s", file, e)
+        except Exception as e:
+            _LOGGER.error("Failed to remove gzip file: %s", e)
+
