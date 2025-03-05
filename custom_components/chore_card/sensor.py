@@ -1,39 +1,49 @@
 import logging
-from homeassistant import config_entries, core
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
 
-DOMAIN = "chore_card"
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+
+from .const import DOMAIN
 LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: config_entries.ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up Chore Card sensor from a config entry."""
-    entity_id = f"sensor.{entry.entry_id}"
+    entity_id = f"sensor.chore_card_{config_entry.entry_id}"  # ✅ Fix entity_id format
     LOGGER.info(f"Setting up Chore Card sensor: {entity_id}")
 
-    sensor = ChoreCardSensor(hass, entity_id, entry.data)
+    sensor = ChoreCardSensor(hass, entity_id, config_entry.data)
     async_add_entities([sensor], True)
 
     # Store the sensor instance in hass.data
     hass.data.setdefault(DOMAIN, {})[entity_id] = sensor
 
-    # Register a service to allow frontend updates
-    async def handle_update_state(call):
-        """Handle updates from the frontend."""
-        entity_id = call.data.get("entity_id")
-        new_state = call.data.get("state", "active")
-        new_attributes = call.data.get("attributes", {})
+    # ✅ Register service only if it doesn't exist
+    if not hass.services.has_service(DOMAIN, "update_state"):
+        async def handle_update_state(call):
+            """Handle updates from the frontend."""
+            entity_id = call.data.get("entity_id")
+            new_state = call.data.get("state", "active")
+            new_attributes = call.data.get("attributes", {})
 
-        if entity_id in hass.data[DOMAIN]:
-            LOGGER.info(f"Updating {entity_id} state: {new_state}, attributes: {new_attributes}")
-            hass.data[DOMAIN][entity_id].update_state(new_state, new_attributes)
+            sensor = hass.states.get(entity_id)  # ✅ Get sensor from state machine
 
-    hass.services.async_register(DOMAIN, "update_state", handle_update_state)
+            if sensor:
+                LOGGER.info(f"Updating {entity_id} - State: {new_state}, Attributes: {new_attributes}")
 
-class ChoreCardSensor(SensorEntity):
+                # ✅ Update Home Assistant's state machine
+                hass.states.async_set(entity_id, new_state, new_attributes)
+            else:
+                LOGGER.warning(f"Entity {entity_id} not found. Cannot update.")
+
+        hass.services.async_register(DOMAIN, "update_state", handle_update_state)
+        LOGGER.info("Registered service: chore_card.update_state")
+
+class ChoreCardSensor(Entity):
     """Representation of a Chore Card Sensor."""
 
-    def __init__(self, hass: core.HomeAssistant, entity_id: str, config_data: dict):
+    def __init__(self, hass: HomeAssistant, entity_id: str, config_data: dict):
         """Initialize the sensor with stored chore data."""
         self.hass = hass
         self.entity_id = entity_id
@@ -67,10 +77,15 @@ class ChoreCardSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attr_extra_state_attributes
+    
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return self.entity_id  # ✅ Ensure unique_id is valid
 
     @callback
-    def update(self, new_state, new_attributes):
+    def update_state(self, new_state, new_attributes):
         """Update the sensor state and attributes."""
         self._attr_state = new_state
         self._attr_extra_state_attributes.update(new_attributes)
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state()  # ✅ Properly notify HA of state change

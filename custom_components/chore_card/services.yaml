@@ -1,6 +1,0 @@
-reset_chores:
-  description: "Reset all chores for the specified Chore Card."
-  fields:
-    card_id:
-      description: "The unique ID of the Chore Card to reset."
-      example: "kitchen_chores"

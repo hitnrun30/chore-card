@@ -11,13 +11,13 @@
   "issue_tracker": "https://github.com/hitnrun30/chore-card/issues",
   "release_notes": "https://github.com/hitnrun30/chore-card/releases",
   "zip_release": false,
-  "domain": "chore_card",
   "integration_type": "integration",
   "categories": ["integration", "lovelace"],
   "resources": [
     {
       "type": "module",
-      "url": "/hacsfiles/chore-card/chore-card.js"
+      "url": "/hacsfiles/chore-card/chore-card.js",
+      "filename": "chore-card.js"
     }
   ],
   "icon": "https://raw.githubusercontent.com/hitnrun30/chore-card/main/icon.png"
