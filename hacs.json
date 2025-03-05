@@ -10,7 +10,7 @@
   "documentation": "https://github.com/hitnrun30/chore-card",
   "issue_tracker": "https://github.com/hitnrun30/chore-card/issues",
   "release_notes": "https://github.com/hitnrun30/chore-card/releases",
-  "zip_release": false,
+  "zip_release": true,
   "integration_type": "integration",
   "categories": ["integration", "lovelace"],
   "resources": [
