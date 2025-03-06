@@ -118,10 +118,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return len(entries)
 
     if get_instance_count(hass) == 0:
-        # Remove frontend assets if this is the only instance
+        # Remove frontend assets if this is the last instance
         _LOGGER.info("Removing Chore Card Lovelace resources")
         frontend_registration = ChoreCardRegistration(hass)
         await frontend_registration.async_unregister()
+
+        # ✅ Remove the frontend files from /www/community/chore-card/
+        frontend_dest = hass.config.path("www/community/chore_card")
+
+        def remove_frontend_files():
+            """Delete the Chore Card frontend directory."""
+            if os.path.exists(frontend_dest):
+                shutil.rmtree(frontend_dest)
+                _LOGGER.info("Successfully removed /www/community/chore_card/")
+
+        await hass.async_add_executor_job(remove_frontend_files)
 
     # ✅ Remove the sensor entity before unloading the integration
     entity_id = f"sensor.{entry.entry_id}"
