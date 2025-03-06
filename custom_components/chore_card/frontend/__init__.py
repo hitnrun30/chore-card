@@ -8,7 +8,7 @@ from homeassistant import core
 from homeassistant.helpers.event import async_call_later
 from homeassistant.components.http import StaticPathConfig
 
-from ..const import URL_BASE, CHORE_CARDS
+from ..const import URL_BASE, CHORE_CARDS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -17,9 +17,33 @@ class ChoreCardRegistration:
         self.hass = hass
 
     async def async_register(self):
+        """Register Chore Card frontend files in Lovelace."""
+        _LOGGER.info("Registering Chore Card frontend")
+
+        # ✅ Step 1: Get the version from `manifest.json` and inject it
+        manifest_version = self.hass.data["integrations"][DOMAIN].manifest["version"]
+        self.hass.data["chore_card_version"] = manifest_version
+
         await self.async_register_chore_path()
+
+        # ✅ Step 2: Only proceed if Lovelace is in "storage" mode
         if self.hass.data["lovelace"].mode == "storage":
             await self.async_wait_for_lovelace_resources()
+
+            # ✅ Step 3: Register only `chore-card.js`
+            resources = self.hass.data["lovelace"].resources
+            js_url = "/hacsfiles/chore-card/chore-card.js"
+
+            # Check if the JavaScript resource is already registered
+            for resource in resources.async_items():
+                if resource["url"] == js_url:
+                    _LOGGER.info("Chore Card JavaScript is already registered.")
+                    return
+
+            # Register the JavaScript file in Lovelace
+            await resources.async_create_item({"res_type": "module", "url": js_url})
+            _LOGGER.info(f"Chore Card JS Registered: {js_url}")
+
 
     # install card resources
     async def async_register_chore_path(self):
@@ -69,6 +93,10 @@ class ChoreCardRegistration:
 
         for card in CHORE_CARDS:
             url = f"{URL_BASE}/{card.get('filename')}"
+
+            if not url.endswith(".js"):
+                _LOGGER.debug("Skipping non-JS file: %s", url)
+                continue
 
             card_registered = False
 

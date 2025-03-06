@@ -4,8 +4,10 @@ export class ChoreCard extends HTMLElement {
   constructor() {
     super();
     console.log("Chore Card created");
-
+    
     this.attachShadow({ mode: "open" });
+
+    this.fetchVersionFromHA(); // ✅ Fetch version from Home Assistant
 
     // Default values for the card configuration
     this.firstDayOfWeek = "Mon"; // Default: Monday
@@ -34,6 +36,22 @@ export class ChoreCard extends HTMLElement {
     this.initializeCard().catch((error) =>
       console.error("Error initializing ChoreCard:", error),
     );
+  }
+
+  async fetchVersionFromHA() {
+    try {
+        if (window.hass) {
+            const response = await window.hass.callWS({ type: "config/get" });
+            this.version = response.version || "Unknown";
+            console.log(`Chore Card Loaded - Version: ${this.version}`);
+        } else {
+            console.warn("Home Assistant instance not available.");
+            this.version = "Unknown";
+        }
+    } catch (error) {
+        console.error("Error fetching Chore Card version:", error);
+        this.version = "Unknown";
+    }
   }
 
   /**
