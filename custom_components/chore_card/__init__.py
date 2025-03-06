@@ -110,6 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info(f"Unloading Chore Card integration for {entry.entry_id}")
 
     def get_instance_count(hass: HomeAssistant) -> int:
+        """Count the number of active instances of Chore Card."""
         entries = [
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
@@ -117,11 +118,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
         return len(entries)
 
+    # ✅ Only remove resources if this is the last instance
     if get_instance_count(hass) == 0:
-        # Remove frontend assets if this is the last instance
         _LOGGER.info("Removing Chore Card Lovelace resources")
+
         frontend_registration = ChoreCardRegistration(hass)
         await frontend_registration.async_unregister()
+
+        # ✅ Remove Lovelace resource entry
+        resources = hass.data["lovelace"].resources
+        js_url = "/hacsfiles/chore-card/chore-card.js"
+
+        for resource in resources.async_items():
+            if resource["url"] == js_url:
+                await resources.async_delete_item(resource["id"])
+                _LOGGER.info(f"Removed Chore Card JS Resource: {js_url}")
+                break  # ✅ Stop after removing the first match
 
         # ✅ Remove the frontend files from /www/community/chore-card/
         frontend_dest = hass.config.path("www/community/chore_card")
@@ -140,10 +152,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.states.async_remove(entity_id)
         _LOGGER.info(f"Removed sensor entity {entity_id}")
 
-    # Remove stored data
+    # ✅ Remove stored data
     hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    # Remove the service
+    # ✅ Remove the service
     hass.services.async_remove(DOMAIN, "update")
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

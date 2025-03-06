@@ -2,40 +2,42 @@ const BASE_PATH = "/hacsfiles/chore-card/";
 
 export class ChoreCard extends HTMLElement {
   constructor() {
-    super();
-    console.log("Chore Card created");
-    
-    this.attachShadow({ mode: "open" });
+      super();
+      console.log("Chore Card created");
+      
+      this.attachShadow({ mode: "open" });
 
-    this.fetchVersionFromHA(); // ✅ Fetch version from Home Assistant
+      this.fetchVersionFromHA(); // ✅ Fetch version from Home Assistant
 
-    // Default values for the card configuration
-    this.firstDayOfWeek = "Mon"; // Default: Monday
-    this.showLongDayNames = false; // Default: short day names
-    this.pointsPosition = "top"; // Default: points displayed at the top
-    this.dayHeaderBackgroundColor = "blue"; // Default: blue background
-    this.dayHeaderFontColor = "white"; // Default: white text
-    this.currentDayBackgroundColor = "red";
-    this.currentDayFontColor = "white";
+      this.lastChoreCardId = null; // ✅ Track last known chore_card_id
 
-    // Default values for other state-related properties
-    this.data = {}; // Default: no chore data
-    this.users = []; // Default: no users
-    this.userPoints = {}; // Default: no points tracked
-    this.lastReset = null; // Default: no reset date
-    this.lastSavedState = null; // Default: no saved state loaded
-    this.initialized = false; // Initialize as false
+      // Default values for the card configuration
+      this.firstDayOfWeek = "Mon"; // Default: Monday
+      this.showLongDayNames = false; // Default: short day names
+      this.pointsPosition = "top"; // Default: points displayed at the top
+      this.dayHeaderBackgroundColor = "blue"; // Default: blue background
+      this.dayHeaderFontColor = "white"; // Default: white text
+      this.currentDayBackgroundColor = "red";
+      this.currentDayFontColor = "white";
 
-    // Placeholder for Home Assistant token
-    this.haToken = null; // Default to null until hass is set
+      // Default values for other state-related properties
+      this.data = {}; // Default: no chore data
+      this.users = []; // Default: no users
+      this.userPoints = {}; // Default: no points tracked
+      this.lastReset = null; // Default: no reset date
+      this.lastSavedState = null; // Default: no saved state loaded
+      this.initialized = false; // Initialize as false
 
-    // Dynamically resolve paths
-    this.cssPath = `${BASE_PATH}chore-card.css`;
+      // Placeholder for Home Assistant token
+      this.haToken = null; // Default to null until hass is set
 
-    // Initialize the card state and render
-    this.initializeCard().catch((error) =>
-      console.error("Error initializing ChoreCard:", error),
-    );
+      // Dynamically resolve paths
+      this.cssPath = `${BASE_PATH}chore-card.css`;
+
+      // Initialize the card state and render
+      this.initializeCard().catch((error) =>
+          console.error("Error initializing ChoreCard:", error),
+      );
   }
 
   async fetchVersionFromHA() {
@@ -155,35 +157,91 @@ export class ChoreCard extends HTMLElement {
     this._hass = hass;
 
     if (!this.initialized && hass) {
-      try {
-        // Correct token retrieval path
-        this.haToken = hass.auth?.data?.access_token || null;
+        try {
+            // ✅ Retrieve Home Assistant authentication token
+            this.haToken = hass.auth?.data?.access_token || null;
 
-        if (this.haToken) {
-          console.log("Successfully retrieved Home Assistant token.");
-        } else {
-          console.warn("Home Assistant token is not available.");
+            if (this.haToken) {
+                console.log("Successfully retrieved Home Assistant token.");
+            } else {
+                console.warn("Home Assistant token is not available.");
+            }
+
+            // ✅ Determine the API base URL
+            this.apiBaseUrl = hass.auth?.data?.hassUrl || "";
+            if (this.apiBaseUrl) {
+                console.log("Using API base URL:", this.apiBaseUrl);
+            } else {
+                console.warn("API base URL is not available.");
+            }
+
+            // ✅ Initialize card state from HA sensor (Avoid duplicating logic)
+            this.loadStateFromSensor();
+
+            this.initialized = true;
+        } catch (error) {
+            console.error("Error retrieving Home Assistant token or base URL:", error);
         }
-
-        // Determine the API base URL
-        this.apiBaseUrl = hass.auth?.data?.hassUrl || "";
-        if (this.apiBaseUrl) {
-          console.log("Using API base URL:", this.apiBaseUrl);
-        } else {
-          console.warn("API base URL is not available.");
-        }
-
-        // Additional setup or initialization
-        this.initializeCard();
-        this.initialized = true;
-      } catch (error) {
-        console.error("Error retrieving Home Assistant token or base URL:", error);
-      }
     }
+
+    if (!this.config) {
+        return;
+    }
+
+    if (this.config.entity) {
+        this.entity = hass.states[this.config.entity];
+    }
+
+    this.requestUpdate();
+    this.checkAndRegisterChoreCard(); // ✅ Ensure ID is registered only when necessary
   }
+
   
   get hass() {
     return this._hass;
+  }
+
+  async checkAndRegisterChoreCard() {
+      if (!this.hass || !this.config || !this.config.chore_card_id) {
+          return;
+      }
+
+      const newChoreCardId = `sensor.${this.config.chore_card_id}`;
+
+      if (this.lastChoreCardId && this.lastChoreCardId !== newChoreCardId) {
+          await this.deleteChoreCardEntity(this.lastChoreCardId);
+      }
+
+      this.lastChoreCardId = newChoreCardId;
+      await this.registerChoreCardEntity(newChoreCardId);
+  }
+
+  async registerChoreCardEntity(entityId) {
+      try {
+          const states = await this.hass.callWS({ type: "get_states" });
+          const entityExists = states.some(state => state.entity_id === entityId);
+
+          if (!entityExists) {
+              await this.hass.callService("chore_card", "create", { entity_id: entityId });
+              console.log(`Chore Card Entity Registered: ${entityId}`);
+          }
+      } catch (error) {
+          console.error("Error registering Chore Card entity:", error);
+      }
+  }
+
+  async deleteChoreCardEntity(entityId) {
+      try {
+          const states = await this.hass.callWS({ type: "get_states" });
+          const entityExists = states.some(state => state.entity_id === entityId);
+
+          if (entityExists) {
+              await this.hass.callService("chore_card", "delete", { entity_id: entityId });
+              console.log(`Chore Card Entity Deleted: ${entityId}`);
+          }
+      } catch (error) {
+          console.error("Error deleting Chore Card entity:", error);
+      }
   }
 
   createDefaultState(yamlData) {
@@ -262,33 +320,48 @@ export class ChoreCard extends HTMLElement {
 
   async saveStateToHomeAssistant() {
     if (!this._hass) {
-      console.warn("Home Assistant instance not available.");
-      return;
+        console.warn("Home Assistant instance not available.");
+        return;
     }
 
-    const state = {
-      cardId: this.cardId,
-      data: this.data || {}, // Chore data
-      userPoints: this.userPoints || {}, // User points
-      lastReset: this.lastReset || null, // Last reset date
-      firstDayOfWeek: this.firstDayOfWeek, // Option
-      showLongDayNames: this.showLongDayNames, // Option
-      pointsPosition: this.pointsPosition, // Option
-      dayHeaderBackgroundColor: this.dayHeaderBackgroundColor, // Option
-      dayHeaderFontColor: this.dayHeaderFontColor, // Option
-      currentDayBackgroundColor: this.currentDayBackgroundColor,
-      currentDayFontColor: this.currentDayFontColor,
-      users: this.users || [], // Users
+    const entityId = `sensor.${this.cardId}`;
+    const currentState = this._hass.states[entityId]?.attributes;
+    
+    const newState = {
+        cardId: this.cardId,
+        data: this.data || {}, // Chore data
+        userPoints: this.userPoints || {}, // User points
+        lastReset: this.lastReset || null, // Last reset date
+        firstDayOfWeek: this.firstDayOfWeek, // Option
+        showLongDayNames: this.showLongDayNames, // Option
+        pointsPosition: this.pointsPosition, // Option
+        dayHeaderBackgroundColor: this.dayHeaderBackgroundColor, // Option
+        dayHeaderFontColor: this.dayHeaderFontColor, // Option
+        currentDayBackgroundColor: this.currentDayBackgroundColor,
+        currentDayFontColor: this.currentDayFontColor,
+        users: this.users || [], // Users
     };
 
-    console.log("Saving Chore Card state:", state);
+    // ✅ Avoid unnecessary updates if state hasn't changed
+    if (JSON.stringify(currentState) === JSON.stringify(newState)) {
+        console.log("No changes detected, skipping state save.");
+        return;
+    }
 
-    // Use Home Assistant service to update the sensor
-    this._hass.callService("chore_card", "update", {
-      entity_id: `sensor.${this.cardId}`,
-      attributes: state,
-    });
-  }
+    try {
+        console.log("Saving updated Chore Card state:", newState);
+        
+        await this._hass.callService("chore_card", "update", {
+            entity_id: entityId,
+            attributes: newState,
+        });
+
+        console.log(`✅ Successfully saved state for: ${entityId}`);
+    } catch (error) {
+        console.error(`❌ Failed to save Chore Card state: ${error}`);
+    }
+}
+
 
 
   checkAndUpdateOptions(yamlData, savedState) {
