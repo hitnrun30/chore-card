@@ -18,7 +18,7 @@ class ChoreCardRegistration:
 
     async def async_register(self):
         await self.async_register_chore_path()
-        if self.hass.data["lovelace"]["mode"] == "storage":
+        if self.hass.data["lovelace"].mode == "storage":
             await self.async_wait_for_lovelace_resources()
 
     # install card resources
@@ -46,7 +46,7 @@ class ChoreCardRegistration:
                 _LOGGER.error("Lovelace resources failed to load after multiple attempts.")
                 return
 
-            if self.hass.data["lovelace"]["resources"].loaded:
+            if self.hass.data["lovelace"].resources.loaded:
                 await self.async_register_chore_cards()
             else:
                 _LOGGER.debug(
@@ -63,7 +63,7 @@ class ChoreCardRegistration:
         # Get resources already registered
         chore_card_resources = [
             resource
-            for resource in self.hass.data["lovelace"]["resources"].async_items()
+            for resource in self.hass.data["lovelace"].resources.async_items()
             if resource["url"].startswith(URL_BASE)
         ]
 
@@ -83,7 +83,7 @@ class ChoreCardRegistration:
                             card.get("name"),
                             card.get("version"),
                         )
-                        await self.hass.data["lovelace"]["resources"].async_update_item(
+                        await self.hass.data["lovelace"].resources.async_update_item(
                             res.get("id"),
                             {
                                 "res_type": "module",
@@ -105,7 +105,7 @@ class ChoreCardRegistration:
                     card.get("name"),
                     card.get("version"),
                 )
-                await self.hass.data["lovelace"]["resources"].async_create_item(
+                await self.hass.data["lovelace"].resources.async_create_item(
                     {"res_type": "module", "url": url + "?v=" + card.get("version")}
                 )
 
@@ -120,16 +120,16 @@ class ChoreCardRegistration:
 
     async def async_unregister(self):
         """Remove Lovelace resources when the integration is removed."""
-        if self.hass.data["lovelace"]["mode"] == "storage":
+        if self.hass.data["lovelace"].mode == "storage":
             for card in CHORE_CARDS:
                 url = f"{URL_BASE}/{card.get('filename')}"
                 chore_card_resources = [
                     resource
-                    for resource in self.hass.data["lovelace"]["resources"].async_items()
+                    for resource in self.hass.data["lovelace"].resources.async_items()
                     if str(resource["url"]).startswith(url)
                 ]
                 for resource in chore_card_resources:
-                    await self.hass.data["lovelace"]["resources"].async_delete_item(resource.get("id"))
+                    await self.hass.data["lovelace"].resources.async_delete_item(resource.get("id"))
 
             _LOGGER.info("Removed Lovelace resources for Chore Card")
 

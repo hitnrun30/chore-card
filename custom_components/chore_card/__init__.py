@@ -15,6 +15,15 @@ from .frontend import ChoreCardRegistration
 
 _LOGGER = logging.getLogger(__name__)
 
+import os
+import shutil
+import logging
+from homeassistant.core import HomeAssistant
+
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "chore_card"
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Chore Card integration (global setup)."""
     _LOGGER.info("Setting up Chore Card integration (global setup)")
@@ -23,22 +32,34 @@ async def async_setup(hass: HomeAssistant, config: dict):
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
     frontend_dest = hass.config.path("www/community/chore_card")
 
-    # Only copy if the files do not exist or need an update
-    if not os.path.exists(frontend_dest):
-        os.makedirs(frontend_dest)
+    async def ensure_directory():
+        """Ensure the target directory exists."""
+        if not os.path.exists(frontend_dest):
+            os.makedirs(frontend_dest)
 
-    try:
-        for filename in os.listdir(frontend_source):
-            src_path = os.path.join(frontend_source, filename)
-            dest_path = os.path.join(frontend_dest, filename)
+    async def copy_frontend_files():
+        """Copy frontend files asynchronously to avoid blocking the event loop."""
+        try:
+            files = await hass.async_add_executor_job(os.listdir, frontend_source)
+            for filename in files:
+                src_path = os.path.join(frontend_source, filename)
+                dest_path = os.path.join(frontend_dest, filename)
 
-            if os.path.isfile(src_path):
-                if not os.path.exists(dest_path) or os.path.getmtime(src_path) > os.path.getmtime(dest_path):
-                    shutil.copy(src_path, dest_path)
+                if os.path.isfile(src_path):
+                    should_copy = not os.path.exists(dest_path) or (
+                        os.path.getmtime(src_path) > os.path.getmtime(dest_path)
+                    )
 
-        _LOGGER.info("Chore Card frontend files copied successfully to /www/community/chore_card/")
-    except Exception as e:
-        _LOGGER.error("Failed to copy Chore Card frontend files: %s", e)
+                    if should_copy:
+                        await hass.async_add_executor_job(shutil.copy, src_path, dest_path)
+
+            _LOGGER.info("Chore Card frontend files copied successfully to /www/community/chore_card/")
+        except Exception as e:
+            _LOGGER.error("Failed to copy Chore Card frontend files: %s", e)
+
+    # Run tasks asynchronously to prevent blocking Home Assistant
+    await hass.async_add_executor_job(ensure_directory)
+    await copy_frontend_files()
 
     return True  # ✅ Ensure Home Assistant knows the setup was successful
 
@@ -56,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await frontend_registration.async_register()
 
     # ✅ Forward setup to the sensor platform
-    await hass.config_entries.async_forward_entry_setup(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # ✅ Register the update service only if it doesn’t exist
     if not hass.services.has_service(DOMAIN, "update"):

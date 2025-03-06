@@ -1145,4 +1145,7 @@ export class ChoreCard extends HTMLElement {
   }
 }
 
-customElements.define("chore-card", ChoreCard);
+if (!customElements.get("chore-card")) {
+  customElements.define("chore-card", ChoreCard);
+}
+
