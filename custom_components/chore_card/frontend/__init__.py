@@ -18,31 +18,35 @@ class ChoreCardRegistration:
 
     async def async_register(self):
         """Register Chore Card frontend files in Lovelace."""
-        _LOGGER.info("Registering Chore Card frontend")
+        _LOGGER.info("🛠️ Registering Chore Card frontend")
 
-        # ✅ Step 1: Get the version from `manifest.json` and inject it
-        manifest_version = self.hass.data["integrations"][DOMAIN].manifest["version"]
-        self.hass.data["chore_card_version"] = manifest_version
+        try:
+            # ✅ Step 1: Get the version from `manifest.json` and inject it
+            manifest_version = self.hass.data["integrations"][DOMAIN].manifest["version"]
+            self.hass.data["chore_card_version"] = manifest_version
 
-        await self.async_register_chore_path()
+            await self.async_register_chore_path()
 
-        # ✅ Step 2: Only proceed if Lovelace is in "storage" mode
-        if self.hass.data["lovelace"].mode == "storage":
-            await self.async_wait_for_lovelace_resources()
+            # ✅ Step 2: Only proceed if Lovelace is in "storage" mode
+            if self.hass.data["lovelace"].mode == "storage":
+                await self.async_wait_for_lovelace_resources()
 
-            # ✅ Step 3: Register only `chore-card.js`
-            resources = self.hass.data["lovelace"].resources
-            js_url = "/hacsfiles/chore-card/chore-card.js"
+                # ✅ Step 3: Register only `chore-card.js`
+                resources = self.hass.data["lovelace"].resources
+                js_url = "/hacsfiles/chore-card/chore-card.js"
 
-            # Check if the JavaScript resource is already registered
-            for resource in resources.async_items():
-                if resource["url"] == js_url:
-                    _LOGGER.info("Chore Card JavaScript is already registered.")
+                # ✅ Prevent duplicate registrations
+                existing_urls = {res.get("url") for res in resources.async_items()}
+                if js_url in existing_urls:
+                    _LOGGER.info("✅ Chore Card JavaScript is already registered.")
                     return
 
-            # Register the JavaScript file in Lovelace
-            await resources.async_create_item({"res_type": "module", "url": js_url})
-            _LOGGER.info(f"Chore Card JS Registered: {js_url}")
+                # ✅ Register the JavaScript file in Lovelace
+                await resources.async_create_item({"res_type": "module", "url": js_url})
+                _LOGGER.info(f"🎉 Chore Card JS Registered: {js_url}")
+        except Exception as e:
+            _LOGGER.error(f"❌ Failed to register Chore Card frontend: {e}")
+
 
 
     # install card resources
