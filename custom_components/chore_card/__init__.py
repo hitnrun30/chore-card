@@ -35,11 +35,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
     async def ensure_directory():
         """Ensure the target directory exists."""
         if not os.path.exists(frontend_dest):
-            os.makedirs(frontend_dest)
+            os.makedirs(frontend_dest, exist_ok=True)
 
     async def copy_frontend_files():
         """Copy frontend files asynchronously to avoid blocking the event loop."""
         try:
+            if not os.path.exists(frontend_source):
+                _LOGGER.error(f"❌ Frontend source folder not found: {frontend_source}")
+                return
+
             files = await hass.async_add_executor_job(os.listdir, frontend_source)
             for filename in files:
                 src_path = os.path.join(frontend_source, filename)
@@ -53,9 +57,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
                     if should_copy:
                         await hass.async_add_executor_job(shutil.copy, src_path, dest_path)
 
-            _LOGGER.info("Chore Card frontend files copied successfully to /www/community/chore_card/")
+            _LOGGER.info("✅ Chore Card frontend files copied successfully to /www/community/chore_card/")
         except Exception as e:
-            _LOGGER.error("Failed to copy Chore Card frontend files: %s", e)
+            _LOGGER.error(f"❌ Failed to copy Chore Card frontend files: {e}")
 
     # Run tasks asynchronously to prevent blocking Home Assistant
     await hass.async_add_executor_job(ensure_directory)
