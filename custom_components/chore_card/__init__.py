@@ -15,45 +15,36 @@ from .frontend import ChoreCardRegistration
 
 _LOGGER = logging.getLogger(__name__)
 
-import os
-import shutil
-import logging
-from homeassistant.core import HomeAssistant
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "chore_card"
-
-from homeassistant.config_entries import ConfigEntryState
-
-from homeassistant.config_entries import ConfigEntryState
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Chore Card integration (global setup) without requiring a restart."""
+async def async_setup(hass, config):
+    """Set up the Chore Card integration (global setup)."""
     _LOGGER.info("🛠️ Setting up Chore Card integration (global setup)")
 
-    # Define source and destination paths for frontend files
+    # ✅ Define source and destination paths for frontend files
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
     frontend_dest = hass.config.path("www/community/chore_card")
 
     async def ensure_directory():
-        """Ensure the target directories exist."""
-        community_dir = hass.config.path("www/community")
-
+        """Ensure the frontend destination directory exists."""
         try:
+            community_dir = hass.config.path("www/community")
+
+            # ✅ Ensure /www/community exists
             if not os.path.exists(community_dir):
                 os.makedirs(community_dir, exist_ok=True)
-                _LOGGER.info(f"✅ Created community directory: {community_dir}")
+                _LOGGER.info(f"✅ Created directory: {community_dir}")
 
+            # ✅ Ensure /www/community/chore_card/ exists
             if not os.path.exists(frontend_dest):
                 os.makedirs(frontend_dest, exist_ok=True)
                 _LOGGER.info(f"✅ Created frontend destination folder: {frontend_dest}")
+
         except Exception as e:
-            _LOGGER.error(f"❌ Failed to create directories: {e}")
+            _LOGGER.error(f"❌ Failed to create frontend directories: {e}")
 
     async def copy_frontend_files():
         """Copy frontend files asynchronously to avoid blocking the event loop."""
         try:
+            # ✅ Ensure the frontend source directory exists
             if not os.path.exists(frontend_source):
                 _LOGGER.error(f"❌ Frontend source folder not found: {frontend_source}")
                 return False  # Prevent further execution if files are missing
@@ -76,26 +67,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
         except Exception as e:
             _LOGGER.error(f"❌ Failed to copy Chore Card frontend files: {e}")
 
-    # ✅ Ensure directory creation runs properly before copying
+    # ✅ Ensure directory creation runs before copying files
     await hass.async_add_executor_job(ensure_directory)
     await hass.async_add_executor_job(copy_frontend_files)
 
-    # ✅ If Chore Card is already loaded, do nothing
-    if DOMAIN in hass.data:
-        _LOGGER.info("🔄 Chore Card is already loaded, skipping setup.")
-        return True
-
-    # ✅ Attempt to dynamically load the integration
-    _LOGGER.info("🔄 Attempting to dynamically load Chore Card integration.")
-    hass.data.setdefault(DOMAIN, {})
-
-    # ✅ Ensure HA loads the integration immediately (No restart required)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state != ConfigEntryState.LOADED:
-            _LOGGER.info(f"🔄 Manually setting up Chore Card integration for entry {entry.entry_id}")
-            hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
-
-    return True  # ✅ Ensure Home Assistant knows the setup was successful
+    return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Chore Card from a config entry."""
