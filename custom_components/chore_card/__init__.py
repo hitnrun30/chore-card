@@ -26,6 +26,8 @@ DOMAIN = "chore_card"
 
 from homeassistant.config_entries import ConfigEntryState
 
+from homeassistant.config_entries import ConfigEntryState
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Chore Card integration (global setup) without requiring a restart."""
     _LOGGER.info("🛠️ Setting up Chore Card integration (global setup)")
@@ -78,25 +80,31 @@ async def async_setup(hass: HomeAssistant, config: dict):
     await hass.async_add_executor_job(ensure_directory)
     await hass.async_add_executor_job(copy_frontend_files)
 
-    # ✅ Attempt to automatically register the integration if it's missing
-    if DOMAIN not in hass.data:
-        _LOGGER.info("🔄 Registering Chore Card integration dynamically.")
-        hass.data.setdefault(DOMAIN, {})
+    # ✅ If Chore Card is already loaded, do nothing
+    if DOMAIN in hass.data:
+        _LOGGER.info("🔄 Chore Card is already loaded, skipping setup.")
+        return True
+
+    # ✅ Attempt to dynamically load the integration
+    _LOGGER.info("🔄 Attempting to dynamically load Chore Card integration.")
+    hass.data.setdefault(DOMAIN, {})
 
     # ✅ Ensure HA loads the integration immediately (No restart required)
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.state != ConfigEntryState.LOADED:
-            _LOGGER.info("🔄 Dynamically loading Chore Card integration without restart")
-            await hass.config_entries.async_setup(entry.entry_id)
+            _LOGGER.info(f"🔄 Manually setting up Chore Card integration for entry {entry.entry_id}")
+            hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
 
     return True  # ✅ Ensure Home Assistant knows the setup was successful
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Chore Card from a config entry."""
-    _LOGGER.info(f"Setting up Chore Card integration for {entry.entry_id}")
+    _LOGGER.info(f"🛠️ Setting up Chore Card integration for {entry.entry_id}")
 
-    hass.data.setdefault(DOMAIN, {})
+    # Prevent duplicate setups
+    if entry.entry_id in hass.data.setdefault(DOMAIN, {}):
+        _LOGGER.warning(f"⚠️ Chore Card integration {entry.entry_id} is already set up. Skipping...")
+        return False
 
     # Store the config entry
     hass.data[DOMAIN][entry.entry_id] = entry.data
@@ -106,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await frontend_registration.async_register()
 
     # ✅ Forward setup to the sensor platform
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.async_create_task(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
 
     # ✅ Register the update service only if it doesn’t exist
     if not hass.services.has_service(DOMAIN, "update"):
@@ -128,9 +136,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.warning(f"Entity {entity_id} not found. Cannot update.")
 
         hass.services.async_register(DOMAIN, "update", handle_update)
-        _LOGGER.info("Registered service: chore_card.update")
+        _LOGGER.info("✅ Registered service: chore_card.update")
 
-    _LOGGER.info("Chore Card Component Setup Completed")
+    _LOGGER.info("✅ Chore Card Component Setup Completed")
 
     return True
 
