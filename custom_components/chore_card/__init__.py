@@ -23,21 +23,15 @@ async def async_setup(hass, config):
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
     frontend_dest = hass.config.path("www/community/chore_card")
 
-    # ✅ Log paths for debugging
-    _LOGGER.info(f"🔍 Frontend source path: {frontend_source}")
-    _LOGGER.info(f"🔍 Frontend destination path: {frontend_dest}")
-
     async def ensure_directory():
         """Ensure the frontend destination directory exists."""
         try:
             community_dir = hass.config.path("www/community")
 
-            _LOGGER.info(f"🔍 Checking if community directory exists: {community_dir}")
             if not os.path.exists(community_dir):
                 os.makedirs(community_dir, exist_ok=True)
                 _LOGGER.info(f"✅ Created directory: {community_dir}")
 
-            _LOGGER.info(f"🔍 Checking if frontend directory exists: {frontend_dest}")
             if not os.path.exists(frontend_dest):
                 os.makedirs(frontend_dest, exist_ok=True)
                 _LOGGER.info(f"✅ Created frontend destination folder: {frontend_dest}")
@@ -50,7 +44,7 @@ async def async_setup(hass, config):
         try:
             if not os.path.exists(frontend_source):
                 _LOGGER.error(f"❌ Frontend source folder not found: {frontend_source}")
-                return False  # Prevent further execution if files are missing
+                return False
 
             files = await hass.async_add_executor_job(os.listdir, frontend_source)
             for filename in files:
@@ -70,7 +64,6 @@ async def async_setup(hass, config):
         except Exception as e:
             _LOGGER.error(f"❌ Failed to copy Chore Card frontend files: {e}")
 
-    # ✅ Ensure directory creation runs properly before copying
     await hass.async_add_executor_job(ensure_directory)
     await hass.async_add_executor_job(copy_frontend_files)
 
@@ -80,12 +73,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Chore Card from a config entry."""
-    _LOGGER.info(f"🛠️ Setting up Chore Card integration for {entry.entry_id}")
+    _LOGGER.info(f"Setting up Chore Card integration for {entry.entry_id}")
 
-    # Prevent duplicate setups
-    if entry.entry_id in hass.data.setdefault(DOMAIN, {}):
-        _LOGGER.warning(f"⚠️ Chore Card integration {entry.entry_id} is already set up. Skipping...")
-        return False
+    hass.data.setdefault(DOMAIN, {})
 
     # Store the config entry
     hass.data[DOMAIN][entry.entry_id] = entry.data
@@ -95,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await frontend_registration.async_register()
 
     # ✅ Forward setup to the sensor platform
-    hass.async_create_task(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # ✅ Register the update service only if it doesn’t exist
     if not hass.services.has_service(DOMAIN, "update"):
@@ -117,9 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.warning(f"Entity {entity_id} not found. Cannot update.")
 
         hass.services.async_register(DOMAIN, "update", handle_update)
-        _LOGGER.info("✅ Registered service: chore_card.update")
+        _LOGGER.info("Registered service: chore_card.update")
 
-    _LOGGER.info("✅ Chore Card Component Setup Completed")
+    _LOGGER.info("Chore Card Component Setup Completed")
 
     return True
 
