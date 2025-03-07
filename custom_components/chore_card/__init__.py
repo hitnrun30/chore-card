@@ -28,15 +28,23 @@ async def async_setup(hass, config):
         try:
             community_dir = hass.config.path("www/community")
 
+            _LOGGER.info(f"🔍 Checking if community directory exists: {community_dir}")
+
             # ✅ Ensure /www/community exists
             if not os.path.exists(community_dir):
                 os.makedirs(community_dir, exist_ok=True)
                 _LOGGER.info(f"✅ Created directory: {community_dir}")
+            else:
+                _LOGGER.info(f"🟢 Directory already exists: {community_dir}")
 
             # ✅ Ensure /www/community/chore_card/ exists
+            _LOGGER.info(f"🔍 Checking if frontend directory exists: {frontend_dest}")
+
             if not os.path.exists(frontend_dest):
                 os.makedirs(frontend_dest, exist_ok=True)
                 _LOGGER.info(f"✅ Created frontend destination folder: {frontend_dest}")
+            else:
+                _LOGGER.info(f"🟢 Frontend directory already exists: {frontend_dest}")
 
         except Exception as e:
             _LOGGER.error(f"❌ Failed to create frontend directories: {e}")
