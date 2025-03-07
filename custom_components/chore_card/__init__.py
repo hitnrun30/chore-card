@@ -23,28 +23,24 @@ async def async_setup(hass, config):
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
     frontend_dest = hass.config.path("www/community/chore_card")
 
+    # ✅ Log paths for debugging
+    _LOGGER.info(f"🔍 Frontend source path: {frontend_source}")
+    _LOGGER.info(f"🔍 Frontend destination path: {frontend_dest}")
+
     async def ensure_directory():
         """Ensure the frontend destination directory exists."""
         try:
             community_dir = hass.config.path("www/community")
 
             _LOGGER.info(f"🔍 Checking if community directory exists: {community_dir}")
-
-            # ✅ Ensure /www/community exists
             if not os.path.exists(community_dir):
                 os.makedirs(community_dir, exist_ok=True)
                 _LOGGER.info(f"✅ Created directory: {community_dir}")
-            else:
-                _LOGGER.info(f"🟢 Directory already exists: {community_dir}")
 
-            # ✅ Ensure /www/community/chore_card/ exists
             _LOGGER.info(f"🔍 Checking if frontend directory exists: {frontend_dest}")
-
             if not os.path.exists(frontend_dest):
                 os.makedirs(frontend_dest, exist_ok=True)
                 _LOGGER.info(f"✅ Created frontend destination folder: {frontend_dest}")
-            else:
-                _LOGGER.info(f"🟢 Frontend directory already exists: {frontend_dest}")
 
         except Exception as e:
             _LOGGER.error(f"❌ Failed to create frontend directories: {e}")
@@ -52,7 +48,6 @@ async def async_setup(hass, config):
     async def copy_frontend_files():
         """Copy frontend files asynchronously to avoid blocking the event loop."""
         try:
-            # ✅ Ensure the frontend source directory exists
             if not os.path.exists(frontend_source):
                 _LOGGER.error(f"❌ Frontend source folder not found: {frontend_source}")
                 return False  # Prevent further execution if files are missing
@@ -75,9 +70,11 @@ async def async_setup(hass, config):
         except Exception as e:
             _LOGGER.error(f"❌ Failed to copy Chore Card frontend files: {e}")
 
-    # ✅ Ensure directory creation runs before copying files
+    # ✅ Ensure directory creation runs properly before copying
     await hass.async_add_executor_job(ensure_directory)
     await hass.async_add_executor_job(copy_frontend_files)
+
+    _LOGGER.info("✅ Chore Card setup completed successfully!")
 
     return True
 
