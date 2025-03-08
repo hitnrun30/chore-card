@@ -23,15 +23,21 @@ async def async_setup(hass, config):
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
     frontend_dest = hass.config.path("www/community/chore_card")
 
-    async def ensure_directory():
-        """Ensure the frontend destination directory exists."""
+    # ✅ Log paths for debugging
+    _LOGGER.info(f"🔍 Frontend source path: {frontend_source}")
+    _LOGGER.info(f"🔍 Frontend destination path: {frontend_dest}")
+
+    def ensure_directory():
+        """Ensure the frontend destination directory exists (blocking)."""
         try:
             community_dir = hass.config.path("www/community")
 
+            _LOGGER.info(f"🔍 Checking if community directory exists: {community_dir}")
             if not os.path.exists(community_dir):
                 os.makedirs(community_dir, exist_ok=True)
                 _LOGGER.info(f"✅ Created directory: {community_dir}")
 
+            _LOGGER.info(f"🔍 Checking if frontend directory exists: {frontend_dest}")
             if not os.path.exists(frontend_dest):
                 os.makedirs(frontend_dest, exist_ok=True)
                 _LOGGER.info(f"✅ Created frontend destination folder: {frontend_dest}")
@@ -39,14 +45,14 @@ async def async_setup(hass, config):
         except Exception as e:
             _LOGGER.error(f"❌ Failed to create frontend directories: {e}")
 
-    async def copy_frontend_files():
-        """Copy frontend files asynchronously to avoid blocking the event loop."""
+    def copy_frontend_files():
+        """Copy frontend files synchronously to avoid blocking the event loop."""
         try:
             if not os.path.exists(frontend_source):
                 _LOGGER.error(f"❌ Frontend source folder not found: {frontend_source}")
-                return False
+                return False  # Prevent further execution if files are missing
 
-            files = await hass.async_add_executor_job(os.listdir, frontend_source)
+            files = os.listdir(frontend_source)
             for filename in files:
                 src_path = os.path.join(frontend_source, filename)
                 dest_path = os.path.join(frontend_dest, filename)
@@ -57,13 +63,14 @@ async def async_setup(hass, config):
                     )
 
                     if should_copy:
-                        await hass.async_add_executor_job(shutil.copy, src_path, dest_path)
+                        shutil.copy(src_path, dest_path)
                         _LOGGER.info(f"✅ Copied {filename} to {frontend_dest}")
 
             _LOGGER.info("🎉 Chore Card frontend files copied successfully!")
         except Exception as e:
             _LOGGER.error(f"❌ Failed to copy Chore Card frontend files: {e}")
 
+    # ✅ Run directory creation and file copying in a blocking way (prevents async skipping)
     await hass.async_add_executor_job(ensure_directory)
     await hass.async_add_executor_job(copy_frontend_files)
 
@@ -85,29 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await frontend_registration.async_register()
 
     # ✅ Forward setup to the sensor platform
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # ✅ Register the update service only if it doesn’t exist
-    if not hass.services.has_service(DOMAIN, "update"):
-        @callback
-        def handle_update(call: ServiceCall) -> None:
-            """Handle frontend updates to the sensor."""
-            entity_id = call.data.get("entity_id")
-            new_state = call.data.get("state", "active")
-            new_attributes = call.data.get("attributes", {})
-
-            sensor = hass.states.get(entity_id)  # ✅ Ensure the sensor exists in the state machine
-
-            if sensor:
-                _LOGGER.info(f"Updating {entity_id} - State: {new_state}, Attributes: {new_attributes}")
-
-                # Update Home Assistant state machine
-                hass.states.async_set(entity_id, new_state, new_attributes)
-            else:
-                _LOGGER.warning(f"Entity {entity_id} not found. Cannot update.")
-
-        hass.services.async_register(DOMAIN, "update", handle_update)
-        _LOGGER.info("Registered service: chore_card.update")
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)    
 
     _LOGGER.info("Chore Card Component Setup Completed")
 

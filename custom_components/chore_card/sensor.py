@@ -20,25 +20,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     hass.data.setdefault(DOMAIN, {})[entity_id] = sensor
 
     # ✅ Register service only if it doesn't exist
-    if not hass.services.has_service(DOMAIN, "update_state"):
-        async def handle_update_state(call):
+    if not hass.services.has_service(DOMAIN, "update"):   
+        @callback
+        def handle_update_state(call):
             """Handle updates from the frontend."""
             entity_id = call.data.get("entity_id")
             new_state = call.data.get("state", "active")
             new_attributes = call.data.get("attributes", {})
 
-            sensor = hass.states.get(entity_id)  # ✅ Get sensor from state machine
+            sensor = hass.data[DOMAIN].get(entity_id)  # ✅ Get sensor instance
 
             if sensor:
-                LOGGER.info(f"Updating {entity_id} - State: {new_state}, Attributes: {new_attributes}")
-
-                # ✅ Update Home Assistant's state machine
-                hass.states.async_set(entity_id, new_state, new_attributes)
+                # ✅ Only log updates if something actually changed
+                if sensor.state != new_state or sensor.extra_state_attributes != new_attributes:
+                    LOGGER.info(f"Updating {entity_id} - State: {new_state}, Attributes: {new_attributes}")
+                    sensor.async_set_state(new_state, new_attributes)
+                else:
+                    LOGGER.info(f"No change detected for {entity_id}, skipping update.")
             else:
                 LOGGER.warning(f"Entity {entity_id} not found. Cannot update.")
-
-        hass.services.async_register(DOMAIN, "update_state", handle_update_state)
-        LOGGER.info("Registered service: chore_card.update_state")
+     
+        hass.services.async_register(DOMAIN, "update", handle_update_state)
+        LOGGER.info("Registered service: chore_card.update")
 
 class ChoreCardSensor(Entity):
     """Representation of a Chore Card Sensor."""
@@ -84,8 +87,9 @@ class ChoreCardSensor(Entity):
         return self.entity_id  # ✅ Ensure unique_id is valid
 
     @callback
-    def update_state(self, new_state, new_attributes):
-        """Update the sensor state and attributes."""
+    def async_set_state(self, new_state, new_attributes):
+        """Properly update the sensor and notify HA."""
         self._attr_state = new_state
         self._attr_extra_state_attributes.update(new_attributes)
-        self.schedule_update_ha_state()  # ✅ Properly notify HA of state change
+        self.async_write_ha_state()  # ✅ Correct async update method
+
