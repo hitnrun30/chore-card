@@ -17,7 +17,7 @@ class ChoreCardRegistration:
         self.hass = hass
 
     async def async_register(self):
-        """Register Chore Card frontend files in Lovelace with versioning."""
+        """Register Chore Card frontend in Lovelace and remove old resources."""
         _LOGGER.info("🛠️ Registering Chore Card frontend in Lovelace")
 
         try:
@@ -31,29 +31,33 @@ class ChoreCardRegistration:
             if self.hass.data["lovelace"].mode == "storage":
                 await self.async_wait_for_lovelace_resources()
 
-                # ✅ Step 3: Remove any old duplicate resource paths
+                # ✅ Step 3: Remove any outdated or incorrect resource entries
                 resources = self.hass.data["lovelace"].resources
-                base_url = "/hacsfiles/chore-card/chore-card.js"
-                versioned_url = f"{base_url}?v={manifest_version}"  # ✅ Append version
+                correct_url = f"/hacsfiles/chore-card/chore-card.js?v={manifest_version}"  # ✅ Correct versioned URL
+                incorrect_urls = [
+                    "/chore_card/chore-card.js?v=1.0.0",  # ❌ Old incorrect entry
+                    "/chore_card/chore-card.js",  # ❌ Any unversioned legacy entries
+                ]
 
-                # ✅ Remove old resource entries without the correct version
+                # ✅ Remove any outdated resource entries
                 for resource in list(resources.async_items()):
-                    if resource["url"].startswith(base_url) and resource["url"] != versioned_url:
-                        _LOGGER.info(f"🔄 Removing old resource entry: {resource['url']}")
+                    if resource["url"] in incorrect_urls:
+                        _LOGGER.info(f"🔄 Removing outdated resource entry: {resource['url']}")
                         await resources.async_delete_item(resource["id"])
 
                 # ✅ Prevent duplicate registrations
                 existing_urls = {res.get("url") for res in resources.async_items()}
-                if versioned_url in existing_urls:
+                if correct_url in existing_urls:
                     _LOGGER.info(f"✅ Chore Card JavaScript already registered with version: {manifest_version}")
                     return
 
                 # ✅ Register the JavaScript file with version
-                await resources.async_create_item({"res_type": "module", "url": versioned_url})
-                _LOGGER.info(f"🎉 Chore Card JS Registered with version: {versioned_url}")
+                await resources.async_create_item({"res_type": "module", "url": correct_url})
+                _LOGGER.info(f"🎉 Chore Card JS Registered with version: {correct_url}")
 
         except Exception as e:
             _LOGGER.error(f"❌ Failed to register Chore Card frontend: {e}")
+
 
     # install card resources
     async def async_register_chore_path(self):
