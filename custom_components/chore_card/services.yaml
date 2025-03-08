@@ -1,0 +1,23 @@
+update:
+  name: "Update Chore Card"
+  description: "Update the Chore Card sensor state and attributes."
+  target:
+    entity:
+      domain: sensor
+  fields:
+    entity_id:
+      required: true
+      example: "sensor.chore_card_xxxx"
+      selector:
+        entity:
+          domain: sensor
+    state:
+      required: false
+      example: "active"
+      selector:
+        text:
+    attributes:
+      required: false
+      example: '{"user_points": {"John": 10}}'
+      selector:
+        object:
