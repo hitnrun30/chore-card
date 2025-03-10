@@ -106,7 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry and remove all related resources."""
     _LOGGER.info(f"🔴 Unloading Chore Card integration for {entry.entry_id}")
 
-    def get_instance_count(hass: HomeAssistant) -> int:
+    def get_instance_count():
         """Count the number of active instances of Chore Card."""
         count = sum(
             1 for e in hass.config_entries.async_entries(DOMAIN) if not e.disabled_by
@@ -125,8 +125,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id, None)
         _LOGGER.info("✅ Removed stored data for this entry.")
 
-        # ✅ Step 3: Only remove frontend resources if this is the last instance
-        if get_instance_count(hass) == 0:
+        # ✅ Step 3: Fully unload platforms and await their completion
+        unload_result = await hass.config_entries.async_unload_platforms(
+            entry, PLATFORMS
+        )
+        _LOGGER.info(f"✅ Unloaded platforms: {unload_result}")
+
+        # ✅ Step 4: **Await the actual entry removal before checking remaining instances**
+        await (
+            hass.async_block_till_done()
+        )  # ⏳ Ensures HA completes the removal before proceeding
+
+        # ✅ Step 5: Check instance count **after** Home Assistant processes entry removal
+        if get_instance_count() == 0:
             _LOGGER.info("🛑 No more instances left. Removing frontend resources.")
 
             frontend_registration = ChoreCardRegistration(hass)
@@ -167,12 +178,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.info(
                     "ℹ️ `chore_card.update` service was not found, skipping removal."
                 )
-
-        # ✅ Step 4: Unload platforms
-        unload_result = await hass.config_entries.async_unload_platforms(
-            entry, PLATFORMS
-        )
-        _LOGGER.info(f"✅ Unloaded platforms: {unload_result}")
 
         return unload_result
 
