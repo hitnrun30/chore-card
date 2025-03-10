@@ -1,4 +1,5 @@
 """Chore Card Integration for Home Assistant."""
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +15,7 @@ from .const import DOMAIN
 from .frontend import ChoreCardRegistration
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass, config):
     """Set up the Chore Card integration (global setup)."""
@@ -78,6 +80,7 @@ async def async_setup(hass, config):
 
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Chore Card from a config entry."""
     _LOGGER.info(f"Setting up Chore Card integration for {entry.entry_id}")
@@ -92,63 +95,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await frontend_registration.async_register()
 
     # ✅ Forward setup to the sensor platform
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)    
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.info("Chore Card Component Setup Completed")
 
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    _LOGGER.info(f"Unloading Chore Card integration for {entry.entry_id}")
+    """Unload a config entry and remove all related resources."""
+    _LOGGER.info(f"🔴 Unloading Chore Card integration for {entry.entry_id}")
 
     def get_instance_count(hass: HomeAssistant) -> int:
         """Count the number of active instances of Chore Card."""
-        entries = [
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if not entry.disabled_by
-        ]
-        return len(entries)
+        return sum(
+            1 for e in hass.config_entries.async_entries(DOMAIN) if not e.disabled_by
+        )
 
-    # ✅ Only remove resources if this is the last instance
+    # ✅ Step 1: Remove the sensor entity (if it exists)
+    entity_id = f"sensor.{entry.entry_id}"
+    if hass.states.get(entity_id):
+        hass.states.async_remove(entity_id)
+        _LOGGER.info(f"✅ Removed sensor entity: {entity_id}")
+
+    # ✅ Step 2: Remove stored data for this entry
+    hass.data[DOMAIN].pop(entry.entry_id, None)
+
+    # ✅ Step 3: Only remove frontend resources if this is the last instance
     if get_instance_count(hass) == 0:
-        _LOGGER.info("Removing Chore Card Lovelace resources")
+        _LOGGER.info("🛑 No more instances left. Removing frontend resources.")
 
         frontend_registration = ChoreCardRegistration(hass)
-        await frontend_registration.async_unregister()
+        await frontend_registration.async_unregister()  # ✅ Unregister Lovelace
 
         # ✅ Remove Lovelace resource entry
-        resources = hass.data["lovelace"].resources
-        js_url = "/hacsfiles/chore-card/chore-card.js"
+        if "lovelace" in hass.data:
+            resources = hass.data["lovelace"].resources
+            js_url = "/hacsfiles/chore-card/chore-card.js"
 
-        for resource in resources.async_items():
-            if resource["url"] == js_url:
-                await resources.async_delete_item(resource["id"])
-                _LOGGER.info(f"Removed Chore Card JS Resource: {js_url}")
-                break  # ✅ Stop after removing the first match
+            for resource in list(resources.async_items()):
+                if resource["url"] == js_url:
+                    _LOGGER.warning(f"🚨 Removing Lovelace resource: {resource['url']}")
+                    await resources.async_delete_item(resource["id"])
+                    break  # ✅ Stop after removing the first match
 
-        # ✅ Remove the frontend files from /www/community/chore-card/
+        # ✅ Remove the frontend files from `/www/community/chore_card/`
         frontend_dest = hass.config.path("www/community/chore_card")
 
         def remove_frontend_files():
             """Delete the Chore Card frontend directory."""
             if os.path.exists(frontend_dest):
-                shutil.rmtree(frontend_dest)
-                _LOGGER.info("Successfully removed /www/community/chore_card/")
+                _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
+                shutil.rmtree(frontend_dest, ignore_errors=True)
 
         await hass.async_add_executor_job(remove_frontend_files)
 
-    # ✅ Remove the sensor entity before unloading the integration
-    entity_id = f"sensor.{entry.entry_id}"
-    if hass.states.get(entity_id):
-        hass.states.async_remove(entity_id)
-        _LOGGER.info(f"Removed sensor entity {entity_id}")
+        # ✅ Remove the update service
+        if hass.services.has_service(DOMAIN, "update"):
+            hass.services.async_remove(DOMAIN, "update")
+            _LOGGER.info("✅ Removed `chore_card.update` service.")
 
-    # ✅ Remove stored data
-    hass.data[DOMAIN].pop(entry.entry_id, None)
-
-    # ✅ Remove the service
-    hass.services.async_remove(DOMAIN, "update")
-
+    # ✅ Step 4: Unload platforms
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

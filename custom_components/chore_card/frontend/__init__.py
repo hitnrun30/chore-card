@@ -3,12 +3,14 @@
 import logging
 import os
 import pathlib
+import shutil
 
 from homeassistant import core
 from homeassistant.helpers.event import async_call_later
 from homeassistant.components.http import StaticPathConfig
 
 from ..const import URL_BASE, CHORE_CARDS, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,7 +24,9 @@ class ChoreCardRegistration:
 
         try:
             # ✅ Step 1: Get the version from `manifest.json`
-            manifest_version = self.hass.data["integrations"][DOMAIN].manifest["version"]
+            manifest_version = self.hass.data["integrations"][DOMAIN].manifest[
+                "version"
+            ]
             self.hass.data["chore_card_version"] = manifest_version
 
             await self.async_register_chore_path()
@@ -42,29 +46,36 @@ class ChoreCardRegistration:
                 # ✅ Remove any outdated resource entries
                 for resource in list(resources.async_items()):
                     if resource["url"] in incorrect_urls:
-                        _LOGGER.info(f"🔄 Removing outdated resource entry: {resource['url']}")
+                        _LOGGER.info(
+                            f"🔄 Removing outdated resource entry: {resource['url']}"
+                        )
                         await resources.async_delete_item(resource["id"])
 
                 # ✅ Prevent duplicate registrations
                 existing_urls = {res.get("url") for res in resources.async_items()}
                 if correct_url in existing_urls:
-                    _LOGGER.info(f"✅ Chore Card JavaScript already registered with version: {manifest_version}")
+                    _LOGGER.info(
+                        f"✅ Chore Card JavaScript already registered with version: {manifest_version}"
+                    )
                     return
 
                 # ✅ Register the JavaScript file with version
-                await resources.async_create_item({"res_type": "module", "url": correct_url})
+                await resources.async_create_item(
+                    {"res_type": "module", "url": correct_url}
+                )
                 _LOGGER.info(f"🎉 Chore Card JS Registered with version: {correct_url}")
 
         except Exception as e:
             _LOGGER.error(f"❌ Failed to register Chore Card frontend: {e}")
 
-
     # install card resources
     async def async_register_chore_path(self):
         """Register custom cards path if not already registered."""
         try:
-            frontend_path = self.hass.config.path("www/community/chore_card")  # ✅ Correct path
-            
+            frontend_path = self.hass.config.path(
+                "www/community/chore_card"
+            )  # ✅ Correct path
+
             await self.hass.http.async_register_static_paths(
                 [StaticPathConfig(URL_BASE, frontend_path, False)]
             )
@@ -81,14 +92,17 @@ class ChoreCardRegistration:
         async def check_lovelace_resources_loaded(now):
             nonlocal retries
             if retries <= 0:
-                _LOGGER.error("Lovelace resources failed to load after multiple attempts.")
+                _LOGGER.error(
+                    "Lovelace resources failed to load after multiple attempts."
+                )
                 return
 
             if self.hass.data["lovelace"].resources.loaded:
                 await self.async_register_chore_cards()
             else:
                 _LOGGER.debug(
-                    "Lovelace resources not loaded yet, retrying in %d seconds...", delay
+                    "Lovelace resources not loaded yet, retrying in %d seconds...",
+                    delay,
                 )
                 retries -= 1
                 async_call_later(self.hass, delay, check_lovelace_resources_loaded)
@@ -161,29 +175,32 @@ class ChoreCardRegistration:
             return 0
 
     async def async_unregister(self):
-        """Remove Lovelace resources when the integration is removed."""
-        if self.hass.data["lovelace"].mode == "storage":
-            for card in CHORE_CARDS:
-                url = f"{URL_BASE}/{card.get('filename')}"
-                chore_card_resources = [
-                    resource
-                    for resource in self.hass.data["lovelace"].resources.async_items()
-                    if str(resource["url"]).startswith(url)
-                ]
-                for resource in chore_card_resources:
-                    await self.hass.data["lovelace"].resources.async_delete_item(resource.get("id"))
+        """Remove Lovelace resources and frontend files when integration is removed."""
+        _LOGGER.info("🗑️ Unregistering Chore Card frontend resources and files")
 
-            _LOGGER.info("Removed Lovelace resources for Chore Card")
+        if (
+            "lovelace" in self.hass.data
+            and self.hass.data["lovelace"].mode == "storage"
+        ):
+            resources = self.hass.data["lovelace"].resources
+            js_url = f"/hacsfiles/chore-card/chore-card.js?v={self.hass.data.get('chore_card_version', '2.0.0')}"
 
-            # ✅ Remove frontend files as well
-            frontend_path = self.hass.config.path("www/community/chore_card")
+            # ✅ Remove Lovelace resource
+            for resource in resources.async_items():
+                if resource["url"] == js_url:
+                    _LOGGER.warning(f"🚨 Removing Lovelace resource: {resource['url']}")
+                    await resources.async_delete_item(resource["id"])
+
+        # ✅ Step 2: Remove frontend files from www/community/
+        frontend_path = self.hass.config.path("www/community/chore_card")
+
+        def remove_frontend_files():
+            """Delete the frontend directory for Chore Card."""
             if os.path.exists(frontend_path):
-                try:
-                    for file in os.listdir(frontend_path):
-                        os.remove(os.path.join(frontend_path, file))
-                    _LOGGER.info("Removed Chore Card frontend files.")
-                except Exception as e:
-                    _LOGGER.error("Failed to remove frontend files: %s", e)
+                _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_path}")
+                shutil.rmtree(frontend_path, ignore_errors=True)
+
+        await self.hass.async_add_executor_job(remove_frontend_files)
 
     async def async_remove_gzip_files(self):
         await self.hass.async_add_executor_job(self.remove_gzip_files)
@@ -198,19 +215,19 @@ class ChoreCardRegistration:
 
         try:
             gzip_files = [
-                filename for filename in os.listdir(path) if filename and filename.endswith(".gz")
+                filename
+                for filename in os.listdir(path)
+                if filename and filename.endswith(".gz")
             ]
 
             for file in gzip_files:
                 original_file = file.replace(".gz", "")
                 original_file_path = os.path.join(path, original_file)
 
-                if (
-                    os.path.exists(original_file_path) and
-                    os.path.getmtime(original_file_path) > os.path.getmtime(os.path.join(path, file))
-                ):
+                if os.path.exists(original_file_path) and os.path.getmtime(
+                    original_file_path
+                ) > os.path.getmtime(os.path.join(path, file)):
                     _LOGGER.debug(f"Removing outdated gzip file: {file}")
                     os.remove(os.path.join(path, file))
         except Exception as e:
             _LOGGER.error("Failed to remove gzip file: %s", e)
-
