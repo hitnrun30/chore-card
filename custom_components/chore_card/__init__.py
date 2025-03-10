@@ -108,52 +108,74 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def get_instance_count(hass: HomeAssistant) -> int:
         """Count the number of active instances of Chore Card."""
-        return sum(
+        count = sum(
             1 for e in hass.config_entries.async_entries(DOMAIN) if not e.disabled_by
         )
+        _LOGGER.info(f"🔍 Active Chore Card instances remaining: {count}")
+        return count
 
-    # ✅ Step 1: Remove the sensor entity (if it exists)
-    entity_id = f"sensor.{entry.entry_id}"
-    if hass.states.get(entity_id):
-        hass.states.async_remove(entity_id)
-        _LOGGER.info(f"✅ Removed sensor entity: {entity_id}")
+    try:
+        # ✅ Step 1: Remove the sensor entity (if it exists)
+        entity_id = f"sensor.{entry.entry_id}"
+        if hass.states.get(entity_id):
+            hass.states.async_remove(entity_id)
+            _LOGGER.info(f"✅ Removed sensor entity: {entity_id}")
 
-    # ✅ Step 2: Remove stored data for this entry
-    hass.data[DOMAIN].pop(entry.entry_id, None)
+        # ✅ Step 2: Remove stored data for this entry
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        _LOGGER.info("✅ Removed stored data for this entry.")
 
-    # ✅ Step 3: Only remove frontend resources if this is the last instance
-    if get_instance_count(hass) == 0:
-        _LOGGER.info("🛑 No more instances left. Removing frontend resources.")
+        # ✅ Step 3: Only remove frontend resources if this is the last instance
+        if get_instance_count(hass) == 0:
+            _LOGGER.info("🛑 No more instances left. Removing frontend resources.")
 
-        frontend_registration = ChoreCardRegistration(hass)
-        await frontend_registration.async_unregister()  # ✅ Unregister Lovelace
+            frontend_registration = ChoreCardRegistration(hass)
+            await frontend_registration.async_unregister()  # ✅ Unregister Lovelace
+            _LOGGER.info("✅ Unregistered Chore Card frontend.")
 
-        # ✅ Remove Lovelace resource entry
-        if "lovelace" in hass.data:
-            resources = hass.data["lovelace"].resources
-            js_url = "/hacsfiles/chore-card/chore-card.js"
+            # ✅ Remove Lovelace resource entry
+            if "lovelace" in hass.data:
+                resources = hass.data["lovelace"].resources
+                js_url = "/hacsfiles/chore-card/chore-card.js"
 
-            for resource in list(resources.async_items()):
-                if resource["url"] == js_url:
-                    _LOGGER.warning(f"🚨 Removing Lovelace resource: {resource['url']}")
-                    await resources.async_delete_item(resource["id"])
-                    break  # ✅ Stop after removing the first match
+                for resource in list(resources.async_items()):
+                    if resource["url"] == js_url:
+                        _LOGGER.warning(
+                            f"🚨 Removing Lovelace resource: {resource['url']}"
+                        )
+                        await resources.async_delete_item(resource["id"])
+                        _LOGGER.info("✅ Successfully removed Lovelace resource.")
+                        break  # ✅ Stop after removing the first match
 
-        # ✅ Remove the frontend files from `/www/community/chore_card/`
-        frontend_dest = hass.config.path("www/community/chore_card")
+            # ✅ Remove the frontend files from `/www/community/chore_card/`
+            frontend_dest = hass.config.path("www/community/chore_card")
 
-        def remove_frontend_files():
-            """Delete the Chore Card frontend directory."""
-            if os.path.exists(frontend_dest):
-                _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
-                shutil.rmtree(frontend_dest, ignore_errors=True)
+            def remove_frontend_files():
+                """Delete the Chore Card frontend directory."""
+                if os.path.exists(frontend_dest):
+                    _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
+                    shutil.rmtree(frontend_dest, ignore_errors=True)
 
-        await hass.async_add_executor_job(remove_frontend_files)
+            await hass.async_add_executor_job(remove_frontend_files)
+            _LOGGER.info("✅ Successfully removed frontend files.")
 
-        # ✅ Remove the update service
-        if hass.services.has_service(DOMAIN, "update"):
-            hass.services.async_remove(DOMAIN, "update")
-            _LOGGER.info("✅ Removed `chore_card.update` service.")
+            # ✅ Remove the update service
+            if hass.services.has_service(DOMAIN, "update"):
+                hass.services.async_remove(DOMAIN, "update")
+                _LOGGER.info("✅ Removed `chore_card.update` service.")
+            else:
+                _LOGGER.info(
+                    "ℹ️ `chore_card.update` service was not found, skipping removal."
+                )
 
-    # ✅ Step 4: Unload platforms
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        # ✅ Step 4: Unload platforms
+        unload_result = await hass.config_entries.async_unload_platforms(
+            entry, PLATFORMS
+        )
+        _LOGGER.info(f"✅ Unloaded platforms: {unload_result}")
+
+        return unload_result
+
+    except Exception as e:
+        _LOGGER.error(f"❌ Error while unloading Chore Card: {e}")
+        return False
