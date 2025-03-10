@@ -186,7 +186,7 @@ class ChoreCardRegistration:
             js_url = f"/hacsfiles/chore-card/chore-card.js?v={self.hass.data.get('chore_card_version', '2.0.0')}"
 
             # ✅ Remove Lovelace resource
-            for resource in resources.async_items():
+            for resource in list(resources.async_items()):
                 if resource["url"] == js_url:
                     _LOGGER.warning(f"🚨 Removing Lovelace resource: {resource['url']}")
                     await resources.async_delete_item(resource["id"])
