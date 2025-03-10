@@ -6,7 +6,7 @@ import logging
 import os
 import shutil
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
 PLATFORMS = [Platform.SENSOR]
