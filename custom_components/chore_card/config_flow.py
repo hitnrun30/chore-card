@@ -3,6 +3,7 @@
 import logging
 import os
 import shutil
+import time
 import voluptuous as vol
 from homeassistant import config_entries
 
@@ -25,48 +26,66 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial setup step for the Chore Card integration."""
         errors = {}
 
-        # ✅ Generate a temporary default name (before we rename it)
-        temp_name = f"Chore Card"
+        # ✅ Generate a default name based on timestamp (e.g., Chore Card_1712056789)
+        timestamp_id = int(time.time())  # Create a unique ID from current time
+        default_name = f"Chore Card_{timestamp_id}"  # Default integration name
 
         if user_input is not None:
-            # ✅ Create the entry first (Home Assistant generates the entry_id automatically)
-            _LOGGER.info("✅ Creating Chore Card config entry...")
-            entry = await self.async_create_entry(title=temp_name, data={})
+            integration_name = user_input["integration_name"]
 
-            # ✅ Get the generated entry ID and rename the integration
-            if entry:
-                new_name = f"sensor.chore_card_{entry.entry_id}"
-                _LOGGER.info(f"🔄 Renaming integration to: {new_name}")
-                self.hass.config_entries.async_update_entry(entry, title=new_name)
+            # ✅ Ensure sensor follows the naming format
+            sensor_name = (
+                f"sensor.chore_card_{integration_name.replace(' ', '_').lower()}"
+            )
 
-            return entry  # ✅ Return the entry after renaming
+            # ✅ Check if an integration with this name already exists
+            existing_entries = [
+                entry
+                for entry in self._async_current_entries()
+                if entry.title == integration_name
+            ]
+
+            if existing_entries:
+                errors["integration_name"] = "name_exists"
+
+            else:
+                _LOGGER.info(
+                    f"✅ Creating Chore Card config entry with name: {integration_name}"
+                )
+                return self.async_create_entry(
+                    title=integration_name,
+                    data={
+                        "sensor_name": sensor_name
+                    },  # Store sensor name in config entry
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required("integration_name", default=temp_name): str}
+                {vol.Required("integration_name", default=default_name): str}
             ),
             errors=errors,
         )
 
-    async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Handle complete removal of Chore Card, including frontend and Lovelace."""
+    async def async_remove_entry(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Handle complete removal of Chore Card, includin`g frontend and Lovelace."""
         _LOGGER.info(f"🛑 Removing Chore Card config entry: {entry.entry_id}")
 
-        # ✅ Step 1: Fully unload integration
-        await async_unload_entry(hass, entry)
-
-        # ✅ Step 2: Ensure frontend files and Lovelace resource are removed
+        # ✅ Step 1: Unregister frontend
         frontend_registration = ChoreCardRegistration(hass)
         await frontend_registration.async_unregister()
 
-        # ✅ Step 3: Force delete frontend directory
+        # ✅ Step 2: Remove stored data
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+
+        # ✅ Step 3: Remove frontend directory
         frontend_dest = hass.config.path("www/community/chore-card")
 
         def remove_frontend_files():
-            """Force delete the Chore Card frontend directory."""
+            """Delete the Chore Card frontend directory."""
             if os.path.exists(frontend_dest):
                 _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
                 shutil.rmtree(frontend_dest, ignore_errors=True)
 
         await hass.async_add_executor_job(remove_frontend_files)
+        _LOGGER.info("✅ Successfully removed frontend files.")

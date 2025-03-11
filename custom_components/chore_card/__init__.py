@@ -104,68 +104,41 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return count
 
     try:
-        # ✅ Step 1: Remove the sensor entity (if it exists)
+        # ✅ Step 1: Remove sensor entity (if it exists)
         entity_id = f"sensor.{entry.entry_id}"
         if hass.states.get(entity_id):
             hass.states.async_remove(entity_id)
             _LOGGER.info(f"✅ Removed sensor entity: {entity_id}")
 
-        # ✅ Step 2: Remove stored data for this entry
+        # ✅ Step 2: Remove stored data
         hass.data[DOMAIN].pop(entry.entry_id, None)
         _LOGGER.info("✅ Removed stored data for this entry.")
 
-        # ✅ Step 3: Unload platforms
+        # ✅ Step 3: If this is the last integration, remove frontend files
+        if get_instance_count() == 1:
+            _LOGGER.info("🛑 Last instance removed. Cleaning up frontend resources.")
+
+            frontend_registration = ChoreCardRegistration(hass)
+            await frontend_registration.async_unregister()  # ✅ Unregister Lovelace
+            _LOGGER.info("✅ Unregistered Chore Card frontend.")
+
+            # ✅ Remove the frontend files from `/www/community/chore-card/`
+            frontend_dest = hass.config.path("www/community/chore-card")
+
+            def remove_frontend_files():
+                """Delete the Chore Card frontend directory."""
+                if os.path.exists(frontend_dest):
+                    _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
+                    shutil.rmtree(frontend_dest, ignore_errors=True)
+
+            await hass.async_add_executor_job(remove_frontend_files)
+            _LOGGER.info("✅ Successfully removed frontend files.")
+
+        # ✅ Step 4: Unload platforms
         unload_result = await hass.config_entries.async_unload_platforms(
             entry, PLATFORMS
         )
         _LOGGER.info(f"✅ Unloaded platforms: {unload_result}")
-
-        # ✅ Step 4: If there were multiple instances, do NOT remove frontend
-        if get_instance_count() > 1:
-            _LOGGER.info(
-                "ℹ️ Other Chore Card instances still exist. Skipping frontend cleanup."
-            )
-            return unload_result
-
-        # ✅ Step 5: Remove frontend resources if this was the last instance
-        _LOGGER.info("🛑 No more instances left. Removing frontend resources.")
-
-        frontend_registration = ChoreCardRegistration(hass)
-        await frontend_registration.async_unregister()  # ✅ Unregister Lovelace
-        _LOGGER.info("✅ Unregistered Chore Card frontend.")
-
-        # ✅ Remove Lovelace resource entry
-        if "lovelace" in hass.data:
-            resources = hass.data["lovelace"].resources
-            js_url = "/hacsfiles/chore-card/chore-card.js"
-
-            for resource in list(resources.async_items()):
-                if resource["url"] == js_url:
-                    _LOGGER.warning(f"🚨 Removing Lovelace resource: {resource['url']}")
-                    await resources.async_delete_item(resource["id"])
-                    _LOGGER.info("✅ Successfully removed Lovelace resource.")
-                    break  # ✅ Stop after removing the first match
-
-        # ✅ Remove the frontend files from `/www/community/chore-card/`
-        frontend_dest = hass.config.path("www/community/chore-card")
-
-        def remove_frontend_files():
-            """Delete the Chore Card frontend directory."""
-            if os.path.exists(frontend_dest):
-                _LOGGER.info(f"🗑️ Removing frontend folder: {frontend_dest}")
-                shutil.rmtree(frontend_dest, ignore_errors=True)
-
-        await hass.async_add_executor_job(remove_frontend_files)
-        _LOGGER.info("✅ Successfully removed frontend files.")
-
-        # ✅ Remove the update service
-        if hass.services.has_service(DOMAIN, "update"):
-            hass.services.async_remove(DOMAIN, "update")
-            _LOGGER.info("✅ Removed `chore_card.update` service.")
-        else:
-            _LOGGER.info(
-                "ℹ️ `chore_card.update` service was not found, skipping removal."
-            )
 
         return unload_result
 
