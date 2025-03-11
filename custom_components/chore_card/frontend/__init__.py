@@ -73,7 +73,7 @@ class ChoreCardRegistration:
         """Register custom cards path if not already registered."""
         try:
             frontend_path = self.hass.config.path(
-                "www/community/chore_card"
+                "www/community/chore-card"
             )  # ✅ Correct path
 
             await self.hass.http.async_register_static_paths(
@@ -192,7 +192,7 @@ class ChoreCardRegistration:
                     await resources.async_delete_item(resource["id"])
 
         # ✅ Step 2: Remove frontend files from www/community/
-        frontend_path = self.hass.config.path("www/community/chore_card")
+        frontend_path = self.hass.config.path("www/community/chore-card")
 
         def remove_frontend_files():
             """Delete the frontend directory for Chore Card."""
@@ -207,7 +207,7 @@ class ChoreCardRegistration:
 
     def remove_gzip_files(self):
         """Remove outdated gzip-compressed files."""
-        path = self.hass.config.path("www/community/chore_card")
+        path = self.hass.config.path("www/community/chore-card")
 
         if not os.path.exists(path):
             _LOGGER.warning("Frontend path does not exist: %s", path)

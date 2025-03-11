@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def ensure_directory(hass: HomeAssistant):
     """Ensure the frontend destination directory exists (blocking)."""
-    frontend_dest = hass.config.path("www/community/chore_card")
+    frontend_dest = hass.config.path("www/community/chore-card")
 
     if not os.path.exists(frontend_dest):
         os.makedirs(frontend_dest, exist_ok=True)
@@ -29,7 +29,7 @@ def ensure_directory(hass: HomeAssistant):
 def copy_frontend_files(hass: HomeAssistant):
     """Copy frontend files synchronously from the integration folder to the www folder."""
     frontend_source = hass.config.path("custom_components/chore_card/frontend")
-    frontend_dest = hass.config.path("www/community/chore_card")
+    frontend_dest = hass.config.path("www/community/chore-card")
 
     try:
         if not os.path.exists(frontend_source):
@@ -146,8 +146,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.info("✅ Successfully removed Lovelace resource.")
                     break  # ✅ Stop after removing the first match
 
-        # ✅ Remove the frontend files from `/www/community/chore_card/`
-        frontend_dest = hass.config.path("www/community/chore_card")
+        # ✅ Remove the frontend files from `/www/community/chore-card/`
+        frontend_dest = hass.config.path("www/community/chore-card")
 
         def remove_frontend_files():
             """Delete the Chore Card frontend directory."""

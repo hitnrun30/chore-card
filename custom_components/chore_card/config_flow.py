@@ -22,19 +22,32 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        _LOGGER.debug(f"Received user input: {user_input}")  # ✅ Debugging log
+        """Handle the initial setup step for the Chore Card integration."""
+        errors = {}
 
-        if user_input is None:  # ✅ Fix: Correctly detect initial form submission
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema({}),
-            )
+        # ✅ Generate a temporary default name (before we rename it)
+        temp_name = f"Chore Card"
 
-        _LOGGER.info("✅ Creating Chore Card config entry.")
-        return self.async_create_entry(
-            title="Chore Card", data={}
-        )  # ✅ Always create entry
+        if user_input is not None:
+            # ✅ Create the entry first (Home Assistant generates the entry_id automatically)
+            _LOGGER.info("✅ Creating Chore Card config entry...")
+            entry = await self.async_create_entry(title=temp_name, data={})
+
+            # ✅ Get the generated entry ID and rename the integration
+            if entry:
+                new_name = f"sensor.chore_card_{entry.entry_id}"
+                _LOGGER.info(f"🔄 Renaming integration to: {new_name}")
+                self.hass.config_entries.async_update_entry(entry, title=new_name)
+
+            return entry  # ✅ Return the entry after renaming
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required("integration_name", default=temp_name): str}
+            ),
+            errors=errors,
+        )
 
     async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Handle complete removal of Chore Card, including frontend and Lovelace."""
@@ -48,7 +61,7 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await frontend_registration.async_unregister()
 
         # ✅ Step 3: Force delete frontend directory
-        frontend_dest = hass.config.path("www/community/chore_card")
+        frontend_dest = hass.config.path("www/community/chore-card")
 
         def remove_frontend_files():
             """Force delete the Chore Card frontend directory."""
