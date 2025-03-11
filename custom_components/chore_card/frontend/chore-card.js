@@ -192,7 +192,7 @@ export class ChoreCard extends HTMLElement {
         this.entity = hass.states[this.config.entity];
     }
 
-    this.requestUpdate();
+    this.render();
     this.checkAndRegisterChoreCard(); // ✅ Ensure ID is registered only when necessary
   }
 

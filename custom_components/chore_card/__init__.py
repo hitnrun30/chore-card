@@ -68,25 +68,41 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Chore Card from a config entry."""
-    _LOGGER.info(f"Setting up Chore Card integration for {entry.entry_id}")
+    _LOGGER.info(f"🔄 Setting up Chore Card integration for {entry.entry_id}")
 
     hass.data.setdefault(DOMAIN, {})
 
-    # Store the config entry
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    # ✅ Retrieve stored sensor name and friendly name
+    friendly_name = entry.title  # Friendly name (user-defined)
+    sensor_name = entry.data.get(
+        "sensor_name", f"sensor.{friendly_name.lower().replace(' ', '_')}"
+    )
 
-    # ✅ Ensure frontend files exist on integration setup
+    _LOGGER.info(f"✅ Assigned Sensor: {sensor_name} (Friendly Name: {friendly_name})")
+
+    # ✅ Store the config entry
+    hass.data[DOMAIN][entry.entry_id] = {"sensor_name": sensor_name, **entry.data}
+
+    # ✅ Ensure directory and copy frontend files
     await hass.async_add_executor_job(ensure_directory, hass)
     await hass.async_add_executor_job(copy_frontend_files, hass)
 
-    # ✅ Register frontend first to ensure Lovelace finds it
+    # ✅ Register frontend
     frontend_registration = ChoreCardRegistration(hass)
     await frontend_registration.async_register()
+
+    # ✅ Check if rename is needed
+    new_sensor_name = f"sensor.{friendly_name.lower().replace(' ', '_')}"
+    if new_sensor_name != sensor_name:
+        _LOGGER.info(f"🔄 Updating sensor name to match integration: {new_sensor_name}")
+        hass.config_entries.async_update_entry(
+            entry, data={"sensor_name": new_sensor_name}
+        )
 
     # ✅ Forward setup to the sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _LOGGER.info("Chore Card Component Setup Completed")
+    _LOGGER.info("🎉 Chore Card Component Setup Completed")
 
     return True
 

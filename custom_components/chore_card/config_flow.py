@@ -7,14 +7,14 @@ import time
 import voluptuous as vol
 from homeassistant import config_entries
 
-from .const import DOMAIN
 from .frontend import ChoreCardRegistration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from . import async_unload_entry  # ✅ Import from __init__.py
 
-
+VERSION = 1
 _LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,17 +26,15 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial setup step for the Chore Card integration."""
         errors = {}
 
-        # ✅ Generate a default name based on timestamp (e.g., Chore Card_1712056789)
-        timestamp_id = int(time.time())  # Create a unique ID from current time
-        default_name = f"Chore Card_{timestamp_id}"  # Default integration name
+        # ✅ Generate a default name based on timestamp (e.g., "Chore Card 1712056789")
+        timestamp_id = int(time.time())
+        default_name = f"Chore Card {timestamp_id}"
 
         if user_input is not None:
-            integration_name = user_input["integration_name"]
+            integration_name = user_input["integration_name"].strip()
 
-            # ✅ Ensure sensor follows the naming format
-            sensor_name = (
-                f"sensor.chore_card_{integration_name.replace(' ', '_').lower()}"
-            )
+            # ✅ Convert user input into a valid entity_id (lowercase, underscores)
+            entity_id = f"sensor.{integration_name.lower().replace(' ', '_')}"
 
             # ✅ Check if an integration with this name already exists
             existing_entries = [
@@ -47,16 +45,13 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if existing_entries:
                 errors["integration_name"] = "name_exists"
-
             else:
                 _LOGGER.info(
-                    f"✅ Creating Chore Card config entry with name: {integration_name}"
+                    f"✅ Creating Chore Card config entry: {integration_name} ({entity_id})"
                 )
                 return self.async_create_entry(
-                    title=integration_name,
-                    data={
-                        "sensor_name": sensor_name
-                    },  # Store sensor name in config entry
+                    title=integration_name,  # ✅ Friendly name (EXACT user input)
+                    data={"sensor_name": entity_id},  # ✅ Entity ID (fixed format)
                 )
 
         return self.async_show_form(
