@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # ✅ Store the config entry
     hass.data[DOMAIN][entry.entry_id] = {"sensor_name": sensor_name, **entry.data}
 
-    # ✅ Ensure directory and copy frontend files
+    # ✅ Ensure frontend files exist
     await hass.async_add_executor_job(ensure_directory, hass)
     await hass.async_add_executor_job(copy_frontend_files, hass)
 
@@ -93,11 +93,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # ✅ Check if rename is needed
     new_sensor_name = f"sensor.{friendly_name.lower().replace(' ', '_')}"
+
     if new_sensor_name != sensor_name:
-        _LOGGER.info(f"🔄 Updating sensor name to match integration: {new_sensor_name}")
-        hass.config_entries.async_update_entry(
-            entry, data={"sensor_name": new_sensor_name}
-        )
+        # ✅ Check if the new entity ID is already in use
+        existing_entity = hass.states.get(new_sensor_name)
+        if existing_entity:
+            _LOGGER.warning(
+                f"⚠️ Cannot rename sensor to {new_sensor_name} - already exists!"
+            )
+        else:
+            _LOGGER.info(
+                f"🔄 Updating sensor name to match integration: {new_sensor_name}"
+            )
+            hass.config_entries.async_update_entry(
+                entry, data={"sensor_name": new_sensor_name}
+            )
 
     # ✅ Forward setup to the sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

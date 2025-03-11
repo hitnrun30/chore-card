@@ -26,7 +26,7 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial setup step for the Chore Card integration."""
         errors = {}
 
-        # ✅ Generate a default name based on timestamp (e.g., "Chore Card 1712056789")
+        # ✅ Generate a default name based on timestamp
         timestamp_id = int(time.time())
         default_name = f"Chore Card {timestamp_id}"
 
@@ -50,7 +50,7 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     f"✅ Creating Chore Card config entry: {integration_name} ({entity_id})"
                 )
                 return self.async_create_entry(
-                    title=integration_name,  # ✅ Friendly name (EXACT user input)
+                    title=integration_name,  # ✅ Exact user input as friendly name
                     data={"sensor_name": entity_id},  # ✅ Entity ID (fixed format)
                 )
 

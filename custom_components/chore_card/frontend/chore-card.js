@@ -100,12 +100,11 @@ export class ChoreCard extends HTMLElement {
   async initializeCard() {
     console.log("Initializing Chore Card...");
     const yamlData = this.config || {};
-    console.log("YAML data:", yamlData);
 
     if (this._hass) {
-      await this.loadStateFromSensor(yamlData);
+        await this.loadStateFromSensor(yamlData);
     } else {
-      console.warn("Home Assistant instance not available; skipping state loading.");
+        console.warn("Home Assistant instance not available; skipping state loading.");
     }
 
     this.checkForReset();
@@ -302,21 +301,23 @@ export class ChoreCard extends HTMLElement {
 
   async loadStateFromSensor(yamlData) {
     if (!this._hass) {
-      console.warn("Home Assistant instance not available.");
-      return;
+        console.warn("Home Assistant instance not available.");
+        return;
     }
 
     const sensorState = this._hass.states[`sensor.${this.cardId}`];
+
     if (sensorState && sensorState.attributes) {
-      console.log("Loaded state from Home Assistant sensor:", sensorState);
-      this.lastSavedState = sensorState.attributes;
+        console.log("Loaded state from Home Assistant sensor:", sensorState);
+        this.lastSavedState = sensorState.attributes;
     } else {
-      console.warn("No saved state found, creating default.");
-      this.lastSavedState = this.createDefaultState(yamlData);
-      this.saveStateToHomeAssistant(); // Save default state
+        console.warn("No saved state found, creating default.");
+        this.lastSavedState = this.createDefaultState(yamlData);
+        
+        // ✅ Immediately save the default state to Home Assistant
+        await this.saveStateToHomeAssistant();
     }
   }
-
 
   async saveStateToHomeAssistant() {
     if (!this._hass) {
