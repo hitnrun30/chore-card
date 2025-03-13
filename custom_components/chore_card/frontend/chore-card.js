@@ -175,7 +175,8 @@ export class ChoreCard extends HTMLElement {
             }
 
             // ✅ Initialize card state from HA sensor (Avoid duplicating logic)
-            this.loadStateFromSensor();
+            const yamlData = this.config || {};
+            this.loadStateFromSensor(yamlData);
 
             this.initialized = true;
         } catch (error) {
@@ -308,13 +309,24 @@ export class ChoreCard extends HTMLElement {
     const sensorState = this._hass.states[`sensor.${this.cardId}`];
 
     if (sensorState && sensorState.attributes) {
-        console.log("Loaded state from Home Assistant sensor:", sensorState);
-        this.lastSavedState = sensorState.attributes;
+        console.log("✅ Loaded sensor state:", sensorState.attributes);
+
+        // ✅ If data is empty, but YAML data exists, initialize with default
+        if (!sensorState.attributes.data || Object.keys(sensorState.attributes.data).length === 0) {
+            console.warn("⚠️ Sensor data is empty. Initializing from YAML...");
+            this.lastSavedState = this.createDefaultState(yamlData);
+
+            // ✅ Save new default state to Home Assistant
+            await this.saveStateToHomeAssistant();
+        } else {
+            // ✅ Otherwise, use existing sensor data
+            this.lastSavedState = sensorState.attributes;
+        }
     } else {
-        console.warn("No saved state found, creating default.");
+        console.warn("⚠️ No sensor found, creating default.");
         this.lastSavedState = this.createDefaultState(yamlData);
-        
-        // ✅ Immediately save the default state to Home Assistant
+
+        // ✅ Save new default state to Home Assistant
         await this.saveStateToHomeAssistant();
     }
   }
