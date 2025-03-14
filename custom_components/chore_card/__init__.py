@@ -141,7 +141,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("✅ Removed stored data for this entry.")
 
         # ✅ Step 3: If this is the last integration, remove frontend files
-        if get_instance_count() == 1:
+        if get_instance_count() == 1 and "renaming" not in entry.data:
             _LOGGER.info("🛑 Last instance removed. Cleaning up frontend resources.")
 
             frontend_registration = ChoreCardRegistration(hass)

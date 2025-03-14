@@ -36,19 +36,15 @@ class ChoreCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # ✅ Convert user input into a valid entity_id (lowercase, underscores)
             entity_id = f"sensor.{integration_name.lower().replace(' ', '_')}"
 
-            # ✅ Check if an integration with this name already exists
-            existing_entries = [
-                entry
-                for entry in self._async_current_entries()
-                if entry.title == integration_name
-            ]
+            # ✅ Ensure the entity_id is unique
+            existing_entities = {
+                entry.data.get("sensor_name") for entry in self._async_current_entries()
+            }
 
-            if existing_entries:
+            if entity_id in existing_entities:
                 errors["integration_name"] = "name_exists"
             else:
-                _LOGGER.info(
-                    f"✅ Creating Chore Card config entry: {integration_name} ({entity_id})"
-                )
+                _LOGGER.info(f"✅ Creating Chore Card config entry: {integration_name} ({entity_id})")
                 return self.async_create_entry(
                     title=integration_name,  # ✅ Exact user input as friendly name
                     data={"sensor_name": entity_id},  # ✅ Entity ID (fixed format)
